@@ -1,21 +1,29 @@
 from dotenv import load_dotenv
 import os
+from pathlib import Path
+from datetime import timedelta
 
+# -------------------------
+# Environment
+# -------------------------
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-from pathlib import Path
-from datetime import timedelta
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# -------------------------
+# Core Settings
+# -------------------------
 SECRET_KEY = "dev-secret-key"
 
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"] if not DEBUG else []
 
+# -------------------------
+# Installed Apps
+# -------------------------
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -24,32 +32,42 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
+    # Third-party
     "rest_framework",
+    "corsheaders",
 
+    # Local apps
     "lms_apps.core",
     "lms_apps.accounts",
     "lms_apps.colleges",
     "lms_apps.academics",
     "lms_apps.profiles",
     "lms_apps.attendance",
-    'lms_apps.ai_reports',
+    "lms_apps.ai_reports",
     "lms_apps.analytics",
-
 ]
 
+# -------------------------
+# Middleware
+# -------------------------
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
 
+    # Custom tenant middleware
     "lms_apps.colleges.middleware.ActiveCollegeMiddleware",
 
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# -------------------------
+# URLs / Templates
+# -------------------------
 ROOT_URLCONF = "lms_project.urls"
 
 TEMPLATES = [
@@ -70,12 +88,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "lms_project.wsgi.application"
 
+# -------------------------
+# Database
+# -------------------------
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# -------------------------
+# Authentication
+# -------------------------
+AUTH_USER_MODEL = "accounts.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -84,16 +110,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
-USE_I18N = True
-USE_TZ = True
-
-STATIC_URL = "static/"
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-AUTH_USER_MODEL = "accounts.User"
-
+# -------------------------
+# REST Framework / JWT
+# -------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -110,18 +129,32 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
-# -------------------------
-# Security Hardening
-# -------------------------
 
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
+# -------------------------
+# CORS & CSRF (CRITICAL FOR REACT LOGIN)
+# -------------------------
+CORS_ALLOW_ALL_ORIGINS = True  # ✅ Dev-safe, fixes preflight issue
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
+    "http://localhost:5173",
 ]
 
-# Production override (set via environment variables)
-DEBUG = os.getenv("DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
+# -------------------------
+# Internationalization
+# -------------------------
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
 
+# -------------------------
+# Static Files
+# -------------------------
+STATIC_URL = "static/"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# -------------------------
+# Security Hardening (Safe Defaults)
+# -------------------------
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True

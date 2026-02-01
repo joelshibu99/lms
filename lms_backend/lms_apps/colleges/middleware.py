@@ -1,26 +1,29 @@
-from django.http import JsonResponse
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
-
-
 class ActiveCollegeMiddleware:
     """
-    Blocks access for users whose college is INACTIVE
+    Attach college to request only AFTER authentication.
+    Skip public/auth endpoints like login.
     """
+
+    PUBLIC_PATH_PREFIXES = [
+        "/api/accounts/login/",
+        "/api/accounts/token/",
+        "/api/accounts/token/refresh/",
+        "/admin/",
+    ]
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        user = getattr(request, "user", None)
+        # 🔹 Skip public endpoints
+        for path in self.PUBLIC_PATH_PREFIXES:
+            if request.path.startswith(path):
+                return self.get_response(request)
 
-        if user and user.is_authenticated:
-            # SYSTEM_ADMIN is not tied to any college
-            if user.college and user.college.status != "ACTIVE":
-                return JsonResponse(
-                    {"detail": "College is inactive. Access denied."},
-                    status=403,
-                )
+        # 🔹 Skip unauthenticated users
+        if not request.user.is_authenticated:
+            return self.get_response(request)
 
+        # 🔹 Safe now
+        request.college = request.user.college
         return self.get_response(request)
