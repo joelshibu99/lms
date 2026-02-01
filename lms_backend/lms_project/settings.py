@@ -1,3 +1,10 @@
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
 from pathlib import Path
 from datetime import timedelta
 
@@ -25,6 +32,7 @@ INSTALLED_APPS = [
     "lms_apps.academics",
     "lms_apps.profiles",
     "lms_apps.attendance",
+    'lms_apps.ai_reports',
 ]
 
 MIDDLEWARE = [
