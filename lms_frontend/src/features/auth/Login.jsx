@@ -1,88 +1,98 @@
 import { useState } from "react";
-import { Box, Button, TextField, Typography, Paper } from "@mui/material";
-import { login } from "../../api/auth.api";
 import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Card,
+  CardContent,
+} from "@mui/material";
 
-export default function Login() {
-  const navigate = useNavigate();
+import { login as loginApi } from "../../api/auth.api";
+import { useAuth } from "../../auth/AuthContext";
+import { roleRedirect } from "../../routes/roleRedirect";
 
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      // ✅ Send EXACT fields expected by backend
-      const data = await login({
-        email: email,
-        password: password,
-      });
+      const response = await loginApi({ email, password });
+      console.log("LOGIN RESPONSE:", response.data); 
+      const accessToken = response.data.access;
+      const role = response.data.role;
 
-      // ✅ Store JWT tokens
-      localStorage.setItem("access_token", data.access);
-      localStorage.setItem("refresh_token", data.refresh);
+      login(accessToken, role);
 
-      // ✅ Redirect after successful login
-      navigate("/dashboard");
+      const redirectPath = roleRedirect(role);
+      navigate(redirectPath, { replace: true });
     } catch (err) {
-      setError("Invalid credentials. Please try again.");
+      setError("Invalid email or password");
     }
   };
 
   return (
     <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      height="100vh"
     >
-      <Paper elevation={3} sx={{ p: 4, width: 350 }}>
-        <Typography variant="h5" mb={2} align="center">
-          LMS Login
-        </Typography>
-
-        <form onSubmit={handleSubmit}>
-          <TextField
-            label="Email"
-            type="email"
-            fullWidth
-            margin="normal"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          <TextField
-            label="Password"
-            type="password"
-            fullWidth
-            margin="normal"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+      <Card sx={{ width: 400 }}>
+        <CardContent>
+          <Typography variant="h5" mb={2}>
+            Login
+          </Typography>
 
           {error && (
-            <Typography color="error" variant="body2" mt={1}>
+            <Typography color="error" mb={2}>
               {error}
             </Typography>
           )}
 
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            sx={{ mt: 2 }}
-          >
-            Login
-          </Button>
-        </form>
-      </Paper>
+          <form onSubmit={handleSubmit}>
+            <TextField
+              label="Email"
+              type="email"
+              fullWidth
+              margin="normal"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <TextField
+              label="Password"
+              type="password"
+              fullWidth
+              margin="normal"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              sx={{ mt: 2 }}
+            >
+              Login
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </Box>
   );
-}
+};
+
+export default Login;

@@ -36,3 +36,19 @@ class CollegeUserCreateSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+class LoginTokenSerializer(TokenObtainPairSerializer):
+    """
+    Custom JWT login serializer
+    Adds user role to login response
+    """
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        # Attach role for frontend RBAC
+        data["role"] = self.user.role
+
+        return data
