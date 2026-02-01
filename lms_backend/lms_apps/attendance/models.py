@@ -3,7 +3,6 @@ from lms_apps.accounts.models import User
 from lms_apps.academics.models import Subject
 
 
-
 class Attendance(models.Model):
     """
     Attendance record managed by staff for students
@@ -11,14 +10,16 @@ class Attendance(models.Model):
     student = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="attendance"
+        related_name="attendance",
+        db_index=True
     )
     subject = models.ForeignKey(
         Subject,
         on_delete=models.CASCADE,
-        related_name="attendance"
+        related_name="attendance",
+        db_index=True
     )
-    date = models.DateField()
+    date = models.DateField(db_index=True)
     is_present = models.BooleanField(default=False)
 
     class Meta:

@@ -3,7 +3,6 @@ from lms_apps.accounts.models import User
 from lms_apps.colleges.models import College
 
 
-
 class Subject(models.Model):
     """
     Academic subject scoped to a single college (tenant)
@@ -31,12 +30,14 @@ class Marks(models.Model):
     student = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="marks"
+        related_name="marks",
+        db_index=True
     )
     subject = models.ForeignKey(
         Subject,
         on_delete=models.CASCADE,
-        related_name="marks"
+        related_name="marks",
+        db_index=True
     )
     teacher = models.ForeignKey(
         User,

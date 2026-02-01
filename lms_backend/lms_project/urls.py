@@ -15,4 +15,7 @@ urlpatterns = [
 
     # ✅ Day 4 AI
     path("api/ai-reports/", include("lms_apps.ai_reports.urls")),
+
+     # ✅ Day 5 ML
+    path("api/analytics/", include("lms_apps.analytics.urls")),
 ]

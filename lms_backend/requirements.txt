@@ -1,0 +1,8 @@
+Django
+djangorestframework
+djangorestframework-simplejwt
+python-dotenv
+scikit-learn
+joblib
+gunicorn
+psycopg2-binary
