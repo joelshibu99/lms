@@ -1,27 +1,28 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-from rest_framework_simplejwt.tokens import RefreshToken
+from lms_apps.accounts.models import User
+from lms_apps.accounts.serializers import CollegeUserCreateSerializer
+from lms_apps.core.permissions import IsCollegeAdmin
 
-from .serializers import LoginSerializer
+
+class LoginView(TokenObtainPairView):
+    """
+    JWT Login View
+    POST /api/accounts/login/
+    """
+    permission_classes = []
 
 
-class LoginView(APIView):
-    permission_classes = [AllowAny]
+class CollegeUserViewSet(ModelViewSet):
+    serializer_class = CollegeUserCreateSerializer
+    permission_classes = [IsAuthenticated, IsCollegeAdmin]
 
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        user = serializer.validated_data["user"]
-        refresh = RefreshToken.for_user(user)
-
-        return Response(
-            {
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-            },
-            status=status.HTTP_200_OK,
+    def get_queryset(self):
+        return User.objects.filter(
+            college=self.request.user.college
         )
+
+    def perform_create(self, serializer):
+        serializer.save()

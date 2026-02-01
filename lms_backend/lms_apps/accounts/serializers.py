@@ -1,24 +1,38 @@
 from rest_framework import serializers
-from django.contrib.auth import authenticate
+from lms_apps.accounts.models import User
+from lms_apps.core.constants import UserRole
 
-from .models import User
 
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+class CollegeUserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
-    def validate(self, attrs):
-        user = authenticate(
-            email=attrs.get("email"),
-            password=attrs.get("password"),
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "full_name",
+            "role",
+            "password",
+        ]
+
+    def validate_role(self, value):
+        if value not in [
+            UserRole.TEACHER,
+            UserRole.STAFF,
+            UserRole.STUDENT,
+        ]:
+            raise serializers.ValidationError("Invalid role for College Admin")
+        return value
+
+    def create(self, validated_data):
+        college = self.context["request"].user.college
+        password = validated_data.pop("password")
+
+        user = User.objects.create(
+            college=college,
+            **validated_data
         )
-
-        if not user:
-            raise serializers.ValidationError("Invalid email or password")
-
-        if not user.is_active:
-            raise serializers.ValidationError("User account is disabled")
-
-        attrs["user"] = user
-        return attrs
+        user.set_password(password)
+        user.save()
+        return user
