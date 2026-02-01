@@ -22,6 +22,9 @@ INSTALLED_APPS = [
     "lms_apps.core",
     "lms_apps.accounts",
     "lms_apps.colleges",
+    "lms_apps.academics",
+    "lms_apps.profiles",
+    "lms_apps.attendance",
 ]
 
 MIDDLEWARE = [
