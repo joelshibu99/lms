@@ -9,10 +9,7 @@ import CollegeAdminDashboard from "../features/dashboards/CollegeAdminDashboard"
 import TeacherDashboard from "../features/dashboards/TeacherDashboard";
 import StudentDashboard from "../features/dashboards/StudentDashboard";
 import Unauthorized from "../features/dashboards/Unauthorized";
-
-
-
-
+import AttendancePage from "../features/dashboards/AttendancePage";
 
 const AppRoutes = () =>
   useRoutes([
@@ -32,38 +29,47 @@ const AppRoutes = () =>
             </RoleGuard>
           ),
         },
+
         {
           path: "/college-admin",
           element: (
             <RoleGuard allowedRoles={["COLLEGE_ADMIN"]}>
               <CollegeAdminDashboard />
             </RoleGuard>
-            ),
-        },
-        {
-        path: "/teacher",
-        element: (
-          <RoleGuard allowedRoles={["TEACHER"]}>
-            <TeacherDashboard />
-          </RoleGuard>
           ),
         },
+
         {
-        path: "/student",
-        element: (
-          <RoleGuard allowedRoles={["STUDENT"]}>
-            <StudentDashboard />
-          </RoleGuard>
+          path: "/teacher",
+          element: (
+            <RoleGuard allowedRoles={["TEACHER"]}>
+              <TeacherDashboard />
+            </RoleGuard>
           ),
         },
+
         {
-        path: "/unauthorized",
-        element: <Unauthorized />,
+          path: "/teacher/attendance",
+          element: (
+            <RoleGuard allowedRoles={["TEACHER"]}>
+              <AttendancePage />
+            </RoleGuard>
+          ),
         },
 
+        {
+          path: "/student",
+          element: (
+            <RoleGuard allowedRoles={["STUDENT"]}>
+              <StudentDashboard />
+            </RoleGuard>
+          ),
+        },
 
-
-
+        {
+          path: "/unauthorized",
+          element: <Unauthorized />,
+        },
       ],
     },
   ]);

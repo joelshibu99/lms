@@ -1,6 +1,19 @@
 from rest_framework import serializers
 from lms_apps.accounts.models import User
 from lms_apps.core.constants import UserRole
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "full_name",
+            "role",
+            "is_active",
+        ]
 
 
 class CollegeUserCreateSerializer(serializers.ModelSerializer):
@@ -36,7 +49,6 @@ class CollegeUserCreateSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class LoginTokenSerializer(TokenObtainPairSerializer):
@@ -47,8 +59,9 @@ class LoginTokenSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
-
-        # Attach role for frontend RBAC
         data["role"] = self.user.role
-
         return data
+class StudentListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "email"]

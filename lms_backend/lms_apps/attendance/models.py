@@ -5,7 +5,7 @@ from lms_apps.academics.models import Subject
 
 class Attendance(models.Model):
     """
-    Attendance record managed by staff for students
+    Attendance record managed by teachers for students
     """
     student = models.ForeignKey(
         User,
@@ -27,4 +27,4 @@ class Attendance(models.Model):
         ordering = ["-date"]
 
     def __str__(self):
-        return f"{self.student.email} - {self.subject.code} - {self.date}"
+        return f"{self.student.email} - {self.subject.name} - {self.date}"

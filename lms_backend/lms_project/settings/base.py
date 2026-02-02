@@ -3,12 +3,12 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# SECURITY
 SECRET_KEY = "dev-secret-key"
-
 DEBUG = True
-
 ALLOWED_HOSTS = []
 
+# APPLICATIONS
 INSTALLED_APPS = [
     # Django
     "django.contrib.admin",
@@ -25,8 +25,10 @@ INSTALLED_APPS = [
     "lms_apps.core",
     "lms_apps.colleges.apps.CollegesConfig",
     "lms_apps.accounts.apps.AccountsConfig",
+    "lms_apps.academics.apps.AcademicsConfig",  # ✅ REQUIRED
 ]
 
+# MIDDLEWARE
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -43,6 +45,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "lms_project.urls"
 
+# TEMPLATES
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -61,6 +64,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "lms_project.wsgi.application"
 
+# DATABASE
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -68,6 +72,7 @@ DATABASES = {
     }
 }
 
+# PASSWORD VALIDATION
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -75,18 +80,20 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# INTERNATIONALIZATION
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+# STATIC FILES
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# 🔐 Custom user
+# CUSTOM USER MODEL
 AUTH_USER_MODEL = "accounts.User"
 
-# 🔐 DRF + JWT
+# DRF + JWT
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",

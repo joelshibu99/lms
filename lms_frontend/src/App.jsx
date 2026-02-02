@@ -1,7 +1,13 @@
+import AppHeader from "./components/common/AppHeader";
 import AppRoutes from "./app/routes";
 
 const App = () => {
-  return <AppRoutes />;
+  return (
+    <>
+      <AppHeader />
+      <AppRoutes />
+    </>
+  );
 };
 
 export default App;
