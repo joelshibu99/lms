@@ -1,28 +1,16 @@
 import { AppBar, Toolbar, Button, Typography } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
 
 const AppHeader = () => {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("access");
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
-  };
+  const { auth, logout } = useAuth();
 
   return (
     <AppBar position="static">
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Typography
-          variant="h6"
-          sx={{ cursor: "pointer" }}
-          onClick={() => navigate("/")}
-        >
-          LMS
-        </Typography>
+        <Typography variant="h6">LMS</Typography>
 
-        {token && (
-          <Button color="inherit" onClick={handleLogout}>
+        {auth?.token && (
+          <Button color="inherit" onClick={logout}>
             Logout
           </Button>
         )}

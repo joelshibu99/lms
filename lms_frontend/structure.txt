@@ -55709,6 +55709,8 @@ D:.
     |       
     +---components
     |   +---common
+    |   |       AppHeader.jsx
+    |   |       
     |   \---layout
     +---features
     |   +---auth
@@ -55716,6 +55718,7 @@ D:.
     |   |       
     |   +---courses
     |   +---dashboards
+    |   |       AttendancePage.jsx
     |   |       CollegeAdminDashboard.jsx
     |   |       Dashboard.jsx
     |   |       StudentDashboard.jsx
