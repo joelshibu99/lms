@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "../../api/axios";
 
+import Page from "../../components/common/Page";
+
 import {
   Typography,
   Card,
@@ -11,7 +13,14 @@ import {
   Stack,
   MenuItem,
   Divider,
+  Grid,
+  Paper,
+  Box,
 } from "@mui/material";
+
+/* =========================
+   COMPONENT
+========================== */
 
 const AttendancePage = () => {
   const [students, setStudents] = useState([]);
@@ -31,16 +40,18 @@ const AttendancePage = () => {
   const today = new Date().toISOString().split("T")[0];
 
   /* =========================
-     LOAD DROPDOWNS + TODAY ATTENDANCE
+     LOAD DATA
   ========================== */
+
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const [studentsRes, subjectsRes, attendanceRes] = await Promise.all([
-          axios.get("accounts/teacher-students/"),
-          axios.get("academics/teacher-subjects/"),
-          axios.get("attendance/attendance/"),
-        ]);
+        const [studentsRes, subjectsRes, attendanceRes] =
+          await Promise.all([
+            axios.get("accounts/teacher-students/"),
+            axios.get("academics/teacher-subjects/"),
+            axios.get("attendance/attendance/"),
+          ]);
 
         setStudents(studentsRes.data?.results || []);
         setSubjects(subjectsRes.data?.results || []);
@@ -62,12 +73,21 @@ const AttendancePage = () => {
   /* =========================
      HANDLERS
   ========================== */
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({
       ...form,
       [name]: name === "is_present" ? value === "true" : value,
     });
+  };
+
+  const reloadTodayAttendance = async () => {
+    const res = await axios.get("attendance/attendance/");
+    const todayData = (res.data?.results || []).filter(
+      (a) => a.date === today
+    );
+    setTodayAttendance(todayData);
   };
 
   const handleSubmit = async () => {
@@ -85,13 +105,7 @@ const AttendancePage = () => {
 
       setSuccess("Attendance marked successfully");
       setForm({ student: "", subject: "", is_present: true });
-
-      // Reload today's attendance
-      const res = await axios.get("attendance/attendance/");
-      const todayData = (res.data?.results || []).filter(
-        (a) => a.date === today
-      );
-      setTodayAttendance(todayData);
+      await reloadTodayAttendance();
     } catch (e) {
       setError(
         e?.response?.data?.detail ||
@@ -103,98 +117,121 @@ const AttendancePage = () => {
   };
 
   /* =========================
-     UI
+     RENDER
   ========================== */
+
   return (
-    <>
-      <Typography variant="h4" fontWeight="bold" gutterBottom>
-        Mark Attendance
-      </Typography>
+    <Page
+      title="Mark Attendance"
+      subtitle="Select a student and subject to record today’s attendance"
+    >
+      <Grid container spacing={4}>
+        {/* ---------- FORM ---------- */}
+        <Grid item xs={12} md={5}>
+          <Card elevation={1}>
+            <CardContent>
+              <Stack spacing={2.5}>
+                {error && <Alert severity="error">{error}</Alert>}
+                {success && <Alert severity="success">{success}</Alert>}
 
-      {/* Attendance Form */}
-      <Card sx={{ maxWidth: 420 }}>
-        <CardContent>
+                <TextField
+                  select
+                  label="Student"
+                  name="student"
+                  value={form.student}
+                  onChange={handleChange}
+                  fullWidth
+                >
+                  {students.map((s) => (
+                    <MenuItem key={s.id} value={s.id}>
+                      {s.email}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  select
+                  label="Subject"
+                  name="subject"
+                  value={form.subject}
+                  onChange={handleChange}
+                  fullWidth
+                >
+                  {subjects.map((sub) => (
+                    <MenuItem key={sub.id} value={sub.id}>
+                      {sub.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  select
+                  label="Status"
+                  name="is_present"
+                  value={String(form.is_present)}
+                  onChange={handleChange}
+                  fullWidth
+                >
+                  <MenuItem value="true">Present</MenuItem>
+                  <MenuItem value="false">Absent</MenuItem>
+                </TextField>
+
+                <TextField
+                  label="Date"
+                  value={today}
+                  disabled
+                  fullWidth
+                />
+
+                <Button
+                  variant="contained"
+                  onClick={handleSubmit}
+                  disabled={
+                    loading || !form.student || !form.subject
+                  }
+                >
+                  {loading ? "Saving..." : "Submit Attendance"}
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* ---------- TODAY ATTENDANCE ---------- */}
+        <Grid item xs={12} md={7}>
           <Stack spacing={2}>
-            {error && <Alert severity="error">{error}</Alert>}
-            {success && <Alert severity="success">{success}</Alert>}
+            <Typography variant="h6">Today’s Attendance</Typography>
 
-            <TextField
-              select
-              label="Student"
-              name="student"
-              value={form.student}
-              onChange={handleChange}
-              fullWidth
-            >
-              {students.map((s) => (
-                <MenuItem key={s.id} value={s.id}>
-                  {s.email}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <TextField
-              select
-              label="Subject"
-              name="subject"
-              value={form.subject}
-              onChange={handleChange}
-              fullWidth
-            >
-              {subjects.map((sub) => (
-                <MenuItem key={sub.id} value={sub.id}>
-                  {sub.name}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <TextField
-              select
-              label="Status"
-              name="is_present"
-              value={form.is_present}
-              onChange={handleChange}
-              fullWidth
-            >
-              <MenuItem value="true">Present</MenuItem>
-              <MenuItem value="false">Absent</MenuItem>
-            </TextField>
-
-            <TextField label="Date" value={today} disabled fullWidth />
-
-            <Button
-              variant="contained"
-              onClick={handleSubmit}
-              disabled={loading || !form.student || !form.subject}
-            >
-              {loading ? "Saving..." : "Submit Attendance"}
-            </Button>
+            <Paper elevation={1}>
+              <Box sx={{ p: 2 }}>
+                {todayAttendance.length === 0 ? (
+                  <Typography color="text.secondary">
+                    No attendance marked today
+                  </Typography>
+                ) : (
+                  todayAttendance.map((a) => (
+                    <Typography
+                      key={a.id}
+                      sx={{
+                        mb: 1,
+                        fontSize: "0.95rem",
+                      }}
+                    >
+                      {a.student_email} — {a.subject_name} —{" "}
+                      <strong>
+                        {a.is_present ? "Present" : "Absent"}
+                      </strong>
+                    </Typography>
+                  ))
+                )}
+              </Box>
+            </Paper>
           </Stack>
-        </CardContent>
-      </Card>
+        </Grid>
+      </Grid>
 
-      {/* Today Attendance */}
-      <Divider sx={{ my: 4 }} />
-
-      <Typography variant="h6" gutterBottom>
-        Today’s Attendance
-      </Typography>
-
-      <Card sx={{ maxWidth: 600 }}>
-        <CardContent>
-          {todayAttendance.length === 0 ? (
-            <Typography>No attendance marked today</Typography>
-          ) : (
-            todayAttendance.map((a) => (
-              <Typography key={a.id} sx={{ mb: 1 }}>
-                {a.student_email} — {a.subject_name} —{" "}
-                {a.is_present ? "Present" : "Absent"}
-              </Typography>
-            ))
-          )}
-        </CardContent>
-      </Card>
-    </>
+      <Divider sx={{ my: 5 }} />
+    </Page>
   );
 };
 

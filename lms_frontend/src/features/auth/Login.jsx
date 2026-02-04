@@ -9,7 +9,6 @@ import {
   CardContent,
 } from "@mui/material";
 
-import { login as loginApi } from "../../api/auth.api";
 import { useAuth } from "../../auth/AuthContext";
 import { roleRedirect } from "../../routes/roleRedirect";
 
@@ -19,22 +18,18 @@ const Login = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login } = useAuth(); // ✅ ONLY source
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      const response = await loginApi({ email, password });
-      console.log("LOGIN RESPONSE:", response.data); 
-      const accessToken = response.data.access;
-      const role = response.data.role;
+      // ✅ AuthContext handles API + storage
+      const data = await login(email, password);
 
-      login(accessToken, role);
-
-      const redirectPath = roleRedirect(role);
-      navigate(redirectPath, { replace: true });
+      // ✅ Role-based redirect
+      navigate(roleRedirect(data.role), { replace: true });
     } catch (err) {
       setError("Invalid email or password");
     }

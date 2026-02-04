@@ -9,10 +9,18 @@ import {
 import { generateTeacherReport } from "../../api/aiReports.api";
 import axios from "../../api/axios";
 
+import Page from "../../components/common/Page";
+import MetricCard from "../../components/common/MetricCard";
+
+import SchoolIcon from "@mui/icons-material/School";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import CancelIcon from "@mui/icons-material/Cancel";
+import PercentIcon from "@mui/icons-material/Percent";
+import EditIcon from "@mui/icons-material/Edit";
+
 import {
   Grid,
-  Card,
-  CardContent,
+  Stack,
   Typography,
   Table,
   TableHead,
@@ -29,8 +37,12 @@ import {
   TextField,
   Alert,
   IconButton,
+  Box,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
+
+/* =========================
+   COMPONENT
+========================== */
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
@@ -39,7 +51,7 @@ const TeacherDashboard = () => {
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Marks dialog
+  /* Dialog state */
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
@@ -51,7 +63,7 @@ const TeacherDashboard = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // AI Report dialog
+  /* AI report */
   const [aiOpen, setAiOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState("");
@@ -147,14 +159,11 @@ const TeacherDashboard = () => {
       return;
     }
 
-    const studentId = marks[0].student;
-
     setAiOpen(true);
     setAiLoading(true);
-    setAiResult("");
 
     try {
-      const res = await generateTeacherReport(studentId);
+      const res = await generateTeacherReport(marks[0].student);
       setAiResult(res.ai_feedback || "AI report generated.");
     } catch {
       setAiResult("Failed to generate AI report.");
@@ -164,187 +173,173 @@ const TeacherDashboard = () => {
   };
 
   /* =========================
-     ATTENDANCE CALCULATIONS
+     CALCULATIONS
   ========================== */
 
   const todayAttendance = attendance.filter((a) => a.date === today);
   const todayPresent = todayAttendance.filter((a) => a.is_present).length;
   const todayAbsent = todayAttendance.length - todayPresent;
 
-  const overallPresent = attendance.filter((a) => a.is_present).length;
   const overallPercentage =
     attendance.length === 0
       ? 0
-      : Math.round((overallPresent / attendance.length) * 100);
+      : Math.round(
+          (attendance.filter((a) => a.is_present).length /
+            attendance.length) *
+            100
+        );
 
   /* =========================
      RENDER
   ========================== */
 
   return (
-    <>
-      <Typography variant="h4" fontWeight="bold" gutterBottom>
-        Teacher Dashboard
-      </Typography>
-
-      {/* SUMMARY */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2">Marks Entered</Typography>
-              <Typography variant="h5">
-                {loading ? "—" : marks.length}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2">Today Present</Typography>
-              <Typography variant="h5">
-                {loading ? "—" : todayPresent}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2">Today Absent</Typography>
-              <Typography variant="h5">
-                {loading ? "—" : todayAbsent}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2">
-                Overall Attendance %
-              </Typography>
-              <Typography variant="h5">
-                {loading ? "—" : `${overallPercentage}%`}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* ACTIONS */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item>
+    <Page
+      title="Teacher Dashboard"
+      subtitle="Overview of your academic activity and attendance"
+      actions={
+        <>
           <Button variant="contained" onClick={openAdd}>
             Add Marks
           </Button>
-        </Grid>
-
-        <Grid item>
           <Button
             variant="outlined"
             onClick={() => navigate("/teacher/attendance")}
           >
             Mark Attendance
           </Button>
-        </Grid>
-
-        <Grid item>
           <Button variant="outlined" onClick={handleGenerateAIReport}>
             Generate AI Report
           </Button>
+        </>
+      }
+    >
+      {/* ---------- METRICS ---------- */}
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            label="Marks Entered"
+            value={loading ? "—" : marks.length}
+            icon={<SchoolIcon />}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            label="Present Today"
+            value={loading ? "—" : todayPresent}
+            icon={<EventAvailableIcon />}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            label="Absent Today"
+            value={loading ? "—" : todayAbsent}
+            icon={<CancelIcon />}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            label="Attendance %"
+            value={loading ? "—" : `${overallPercentage}%`}
+            icon={<PercentIcon />}
+          />
         </Grid>
       </Grid>
 
-      {/* MARKS TABLE */}
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Marks Entered By Me
-      </Typography>
+      {/* ---------- TABLE SECTION ---------- */}
+      <Box sx={{ mt: 5 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Marks Entered by You
+        </Typography>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Student</TableCell>
-              <TableCell>Subject</TableCell>
-              <TableCell>Marks</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Student</TableCell>
+                <TableCell>Subject</TableCell>
+                <TableCell>Marks</TableCell>
+                <TableCell align="right">Action</TableCell>
+              </TableRow>
+            </TableHead>
 
-          <TableBody>
-            {!loading &&
-              marks.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>{row.student_email}</TableCell>
-                  <TableCell>{row.subject_name}</TableCell>
-                  <TableCell>{row.marks_obtained}</TableCell>
-                  <TableCell align="right">
-                    <IconButton onClick={() => openEdit(row)}>
-                      <EditIcon />
-                    </IconButton>
+            <TableBody>
+              {!loading &&
+                marks.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell>{row.student_email}</TableCell>
+                    <TableCell>{row.subject_name}</TableCell>
+                    <TableCell>{row.marks_obtained}</TableCell>
+                    <TableCell align="right">
+                      <IconButton onClick={() => openEdit(row)}>
+                        <EditIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+              {!loading && marks.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">
+                    No marks entered yet
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
 
-            {!loading && marks.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4} align="center">
-                  No marks entered yet
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* MARKS DIALOG */}
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth>
+      {/* ---------- MARKS DIALOG ---------- */}
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>{editingId ? "Edit Marks" : "Add Marks"}</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ pt: 2 }}>
           {error && <Alert severity="error">{error}</Alert>}
+
           {!editingId && (
             <>
               <TextField
+                fullWidth
                 margin="dense"
                 label="Student ID"
                 name="student"
-                fullWidth
                 value={form.student}
                 onChange={handleChange}
               />
               <TextField
+                fullWidth
                 margin="dense"
                 label="Subject ID"
                 name="subject"
-                fullWidth
                 value={form.subject}
                 onChange={handleChange}
               />
             </>
           )}
+
           <TextField
+            fullWidth
             margin="dense"
             label="Marks Obtained"
-            name="marks_obtained"
             type="number"
-            fullWidth
+            name="marks_obtained"
             value={form.marks_obtained}
             onChange={handleChange}
           />
+
           <TextField
+            fullWidth
             margin="dense"
             label="Remarks"
             name="remarks"
-            fullWidth
             value={form.remarks}
             onChange={handleChange}
           />
         </DialogContent>
+
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
           <Button
@@ -357,8 +352,8 @@ const TeacherDashboard = () => {
         </DialogActions>
       </Dialog>
 
-      {/* AI REPORT */}
-      <Dialog open={aiOpen} onClose={() => setAiOpen(false)} fullWidth>
+      {/* ---------- AI REPORT ---------- */}
+      <Dialog open={aiOpen} onClose={() => setAiOpen(false)} fullWidth maxWidth="md">
         <DialogTitle>AI Performance Report</DialogTitle>
         <DialogContent>
           {aiLoading ? (
@@ -367,11 +362,8 @@ const TeacherDashboard = () => {
             <Typography whiteSpace="pre-line">{aiResult}</Typography>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAiOpen(false)}>Close</Button>
-        </DialogActions>
       </Dialog>
-    </>
+    </Page>
   );
 };
 

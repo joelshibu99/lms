@@ -9,6 +9,6 @@ export const roleRedirect = (role) => {
     case "STUDENT":
       return "/student";
     default:
-      return "/";
+      return "/unauthorized";
   }
 };

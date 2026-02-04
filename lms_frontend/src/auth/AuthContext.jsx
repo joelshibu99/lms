@@ -1,20 +1,34 @@
 import { createContext, useContext, useState } from "react";
+import { login as loginApi } from "../api/auth.api";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [auth, setAuth] = useState({
     token: localStorage.getItem("access"),
+    role: localStorage.getItem("role"),
   });
 
-  const login = (token) => {
-    localStorage.setItem("access", token);
-    setAuth({ token });
+  // ✅ SINGLE login source (API + state + storage)
+  const login = async (email, password) => {
+    const response = await loginApi({ email, password });
+
+    const { access, role } = response.data;
+
+    localStorage.setItem("access", access);
+    localStorage.setItem("role", role);
+
+    setAuth({
+      token: access,
+      role: role,
+    });
+
+    return { access, role }; // 👈 REQUIRED for redirect
   };
 
   const logout = () => {
     localStorage.clear();
-    setAuth({ token: null });
+    setAuth({ token: null, role: null });
     window.location.href = "/";
   };
 
@@ -25,4 +39,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+  return ctx;
+};
