@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "lms_apps.attendance",
     "lms_apps.ai_reports",
     "lms_apps.analytics",
+    "lms_apps.courses",
 ]
 
 # -------------------------

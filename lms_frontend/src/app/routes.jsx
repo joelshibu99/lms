@@ -12,21 +12,19 @@ import TeacherDashboard from "../features/dashboards/TeacherDashboard";
 import StudentDashboard from "../features/dashboards/StudentDashboard";
 import AttendancePage from "../features/dashboards/AttendancePage";
 import Unauthorized from "../features/dashboards/Unauthorized";
+import CoursesPage from "../features/courses/CoursesPage";
 
 const AppRoutes = () =>
   useRoutes([
-    // ───────── PUBLIC ─────────
     {
       path: "/",
       element: <Login />,
     },
-
-    // ───── PROTECTED + LAYOUT ─────
     {
       element: <ProtectedRoute />,
       children: [
         {
-          element: <AppLayout />, // ✅ GLOBAL SaaS LAYOUT
+          element: <AppLayout />,
           children: [
             {
               path: "/system-admin",
@@ -65,6 +63,14 @@ const AppRoutes = () =>
               element: (
                 <RoleGuard allowedRoles={["STUDENT"]}>
                   <StudentDashboard />
+                </RoleGuard>
+              ),
+            },
+            {
+              path: "/courses",
+              element: (
+                <RoleGuard allowedRoles={["COLLEGE_ADMIN", "TEACHER", "STUDENT"]}>
+                  <CoursesPage />
                 </RoleGuard>
               ),
             },
