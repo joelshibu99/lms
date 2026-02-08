@@ -13,6 +13,7 @@ import StudentDashboard from "../features/dashboards/StudentDashboard";
 import AttendancePage from "../features/dashboards/AttendancePage";
 import Unauthorized from "../features/dashboards/Unauthorized";
 import CoursesPage from "../features/courses/CoursesPage";
+import SubjectsPage from "../features/subjects/SubjectsPage"; // ✅ ADD THIS
 
 const AppRoutes = () =>
   useRoutes([
@@ -37,7 +38,7 @@ const AppRoutes = () =>
             {
               path: "/college-admin",
               element: (
-                <RoleGuard allowedRoles={["COLLEGE_ADMIN"]}>
+                <RoleGuard allowedRoles={["COLLEGE_ADMIN", "STUDENT"]}>
                   <CollegeAdminDashboard />
                 </RoleGuard>
               ),
@@ -69,11 +70,28 @@ const AppRoutes = () =>
             {
               path: "/courses",
               element: (
-                <RoleGuard allowedRoles={["COLLEGE_ADMIN", "TEACHER", "STUDENT"]}>
+                <RoleGuard
+                  allowedRoles={[
+                    "COLLEGE_ADMIN",
+                    "TEACHER",
+                    "STUDENT",
+                  ]}
+                >
                   <CoursesPage />
                 </RoleGuard>
               ),
             },
+
+            // ✅ NEW SUBJECT MANAGEMENT ROUTE
+            {
+              path: "/courses/:courseId/subjects",
+              element: (
+                <RoleGuard allowedRoles={["COLLEGE_ADMIN"]}>
+                  <SubjectsPage />
+                </RoleGuard>
+              ),
+            },
+
             {
               path: "/unauthorized",
               element: <Unauthorized />,

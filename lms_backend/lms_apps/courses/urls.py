@@ -1,20 +1,13 @@
 from django.urls import path
 from .views import (
     AdminCourseView,
-    TeacherCoursesView,
     StudentCoursesView,
-    AssignTeacherView,
 )
 
 urlpatterns = [
-    # Courses
+    # College Admin – list & create courses
     path("courses/", AdminCourseView.as_view()),
-    path("courses/assigned/", TeacherCoursesView.as_view()),
-    path("courses/enrolled/", StudentCoursesView.as_view()),
 
-    # Assign teacher (ADMIN only)
-    path(
-        "courses/<int:course_id>/assign-teacher/",
-        AssignTeacherView.as_view(),
-    ),
+    # Student – enrolled courses
+    path("courses/enrolled/", StudentCoursesView.as_view()),
 ]

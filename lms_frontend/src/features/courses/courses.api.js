@@ -11,6 +11,11 @@ export const fetchTeacherCourses = () =>
 export const fetchStudentCourses = () =>
   api.get("/courses/enrolled/");
 
+/* ───────── FETCH SUBJECTS (FOR DROPDOWN) ───────── */
+
+export const fetchSubjects = () =>
+  api.get("/subjects/");
+
 /* ───────── CREATE COURSE (ADMIN) ───────── */
 
 export const createCourse = (data) =>

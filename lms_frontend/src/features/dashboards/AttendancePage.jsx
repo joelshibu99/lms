@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import axios from "../../api/axios";
-
 import Page from "../../components/common/Page";
 
 import {
@@ -9,13 +8,24 @@ import {
   CardContent,
   TextField,
   Button,
-  Alert,
   Stack,
   MenuItem,
   Divider,
   Grid,
   Paper,
   Box,
+  Chip,
+  ToggleButton,
+  ToggleButtonGroup,
+  Snackbar,
+  Alert,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 
 /* =========================
@@ -34,8 +44,13 @@ const AttendancePage = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
+  const [pageLoading, setPageLoading] = useState(true);
+
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -45,6 +60,7 @@ const AttendancePage = () => {
 
   useEffect(() => {
     const loadInitialData = async () => {
+      setPageLoading(true);
       try {
         const [studentsRes, subjectsRes, attendanceRes] =
           await Promise.all([
@@ -61,9 +77,9 @@ const AttendancePage = () => {
         );
         setTodayAttendance(todayData);
       } catch {
-        setStudents([]);
-        setSubjects([]);
         setTodayAttendance([]);
+      } finally {
+        setPageLoading(false);
       }
     };
 
@@ -71,16 +87,8 @@ const AttendancePage = () => {
   }, [today]);
 
   /* =========================
-     HANDLERS
+     HELPERS
   ========================== */
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({
-      ...form,
-      [name]: name === "is_present" ? value === "true" : value,
-    });
-  };
 
   const reloadTodayAttendance = async () => {
     const res = await axios.get("attendance/attendance/");
@@ -90,10 +98,16 @@ const AttendancePage = () => {
     setTodayAttendance(todayData);
   };
 
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  /* =========================
+     SUBMIT
+  ========================== */
+
   const handleSubmit = async () => {
     setLoading(true);
-    setError("");
-    setSuccess("");
 
     try {
       await axios.post("attendance/attendance/", {
@@ -103,13 +117,14 @@ const AttendancePage = () => {
         is_present: form.is_present,
       });
 
-      setSuccess("Attendance marked successfully");
+      showSnackbar("Attendance marked successfully", "success");
       setForm({ student: "", subject: "", is_present: true });
       await reloadTodayAttendance();
     } catch (e) {
-      setError(
+      showSnackbar(
         e?.response?.data?.detail ||
-          "Attendance already marked for today"
+          "Attendance already marked for today",
+        "error"
       );
     } finally {
       setLoading(false);
@@ -131,15 +146,13 @@ const AttendancePage = () => {
           <Card elevation={1}>
             <CardContent>
               <Stack spacing={2.5}>
-                {error && <Alert severity="error">{error}</Alert>}
-                {success && <Alert severity="success">{success}</Alert>}
-
                 <TextField
                   select
                   label="Student"
-                  name="student"
                   value={form.student}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm({ ...form, student: e.target.value })
+                  }
                   fullWidth
                 >
                   {students.map((s) => (
@@ -152,9 +165,10 @@ const AttendancePage = () => {
                 <TextField
                   select
                   label="Subject"
-                  name="subject"
                   value={form.subject}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm({ ...form, subject: e.target.value })
+                  }
                   fullWidth
                 >
                   {subjects.map((sub) => (
@@ -164,24 +178,33 @@ const AttendancePage = () => {
                   ))}
                 </TextField>
 
-                <TextField
-                  select
-                  label="Status"
-                  name="is_present"
-                  value={String(form.is_present)}
-                  onChange={handleChange}
-                  fullWidth
-                >
-                  <MenuItem value="true">Present</MenuItem>
-                  <MenuItem value="false">Absent</MenuItem>
-                </TextField>
+                <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{ mb: 1, color: "text.secondary" }}
+                  >
+                    Attendance Status
+                  </Typography>
 
-                <TextField
-                  label="Date"
-                  value={today}
-                  disabled
-                  fullWidth
-                />
+                  <ToggleButtonGroup
+                    fullWidth
+                    exclusive
+                    value={form.is_present}
+                    onChange={(_, value) =>
+                      value !== null &&
+                      setForm({ ...form, is_present: value })
+                    }
+                  >
+                    <ToggleButton value={true} color="success">
+                      Present
+                    </ToggleButton>
+                    <ToggleButton value={false} color="error">
+                      Absent
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
+
+                <TextField label="Date" value={today} disabled />
 
                 <Button
                   variant="contained"
@@ -199,38 +222,97 @@ const AttendancePage = () => {
 
         {/* ---------- TODAY ATTENDANCE ---------- */}
         <Grid item xs={12} md={7}>
-          <Stack spacing={2}>
-            <Typography variant="h6">Today’s Attendance</Typography>
+          <Typography variant="h6" gutterBottom>
+            Today’s Attendance
+          </Typography>
 
-            <Paper elevation={1}>
-              <Box sx={{ p: 2 }}>
-                {todayAttendance.length === 0 ? (
-                  <Typography color="text.secondary">
-                    No attendance marked today
-                  </Typography>
-                ) : (
-                  todayAttendance.map((a) => (
-                    <Typography
-                      key={a.id}
-                      sx={{
-                        mb: 1,
-                        fontSize: "0.95rem",
-                      }}
-                    >
-                      {a.student_email} — {a.subject_name} —{" "}
-                      <strong>
-                        {a.is_present ? "Present" : "Absent"}
-                      </strong>
-                    </Typography>
-                  ))
-                )}
-              </Box>
-            </Paper>
-          </Stack>
+          <Paper elevation={1}>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Student</TableCell>
+                    <TableCell>Subject</TableCell>
+                    <TableCell>Status</TableCell>
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {pageLoading ? (
+                    [...Array(4)].map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          <Skeleton />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton width={80} />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : todayAttendance.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3}>
+                        <Typography
+                          align="center"
+                          color="text.secondary"
+                        >
+                          No attendance marked today
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    todayAttendance.map((a) => (
+                      <TableRow key={a.id} hover>
+                        <TableCell>{a.student_email}</TableCell>
+                        <TableCell>{a.subject_name}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={
+                              a.is_present
+                                ? "Present"
+                                : "Absent"
+                            }
+                            color={
+                              a.is_present
+                                ? "success"
+                                : "error"
+                            }
+                            size="small"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
         </Grid>
       </Grid>
 
       <Divider sx={{ my: 5 }} />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() =>
+          setSnackbar({ ...snackbar, open: false })
+        }
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          variant="filled"
+          onClose={() =>
+            setSnackbar({ ...snackbar, open: false })
+          }
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Page>
   );
 };
