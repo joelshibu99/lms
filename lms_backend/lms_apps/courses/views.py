@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -52,6 +53,20 @@ class AdminCourseView(APIView):
         return Response(
             CourseSerializer(course).data,
             status=status.HTTP_201_CREATED,
+        )
+
+
+# ─────────────────────────────────────────
+# COLLEGE ADMIN – RETRIEVE + UPDATE COURSE
+# ─────────────────────────────────────────
+class AdminCourseDetailView(RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CourseSerializer
+
+    def get_queryset(self):
+        # Admin can only edit courses of their college
+        return Course.objects.filter(
+            college=self.request.user.college
         )
 
 

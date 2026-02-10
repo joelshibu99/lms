@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 
 import api from "../../api/axios";
@@ -35,15 +39,18 @@ import {
   SubjectsPage
   - Lists subjects under a course
   - Admin: create subjects, assign teacher
-  - Student: read-only view
 */
 
 const SubjectsPage = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { auth } = useAuth();
 
   const isAdmin = auth?.role === "COLLEGE_ADMIN";
+
+  // ✅ FASTEST: course from navigation state
+  const [course] = useState(location.state?.course || null);
 
   const [subjects, setSubjects] = useState([]);
   const [teachers, setTeachers] = useState([]);
@@ -70,7 +77,7 @@ const SubjectsPage = () => {
       const res = await api.get(
         `/academics/courses/${courseId}/subjects/`
       );
-      setSubjects(res.data || []);
+      setSubjects(res.data?.results || []);
     } catch {
       setSnackbar({
         open: true,
@@ -87,12 +94,19 @@ const SubjectsPage = () => {
   ========================== */
 
   useEffect(() => {
-    if (!isAdmin) return;
+  if (!isAdmin) return;
 
-    fetchTeachers().then((res) =>
-      setTeachers(res.data?.results || [])
+  fetchTeachers().then((res) => {
+    const allUsers = res.data?.results || [];
+
+    // ✅ ONLY TEACHERS
+    const onlyTeachers = allUsers.filter(
+      (u) => u.role === "TEACHER"
     );
-  }, [isAdmin]);
+
+    setTeachers(onlyTeachers);
+  });
+}, [isAdmin]);
 
   useEffect(() => {
     loadSubjects();
@@ -187,6 +201,18 @@ const SubjectsPage = () => {
                 Add Subject to Course
               </Typography>
 
+              {/* ✅ COURSE CONTEXT (DISABLED) */}
+              <TextField
+                label="Course"
+                value={
+                  course
+                    ? `${course.code} — ${course.name}`
+                    : `Course ID: ${courseId}`
+                }
+                fullWidth
+                disabled
+              />
+
               <TextField
                 label="Subject Name"
                 name="name"
@@ -265,10 +291,7 @@ const SubjectsPage = () => {
                               <em>Unassigned</em>
                             </MenuItem>
                             {teachers.map((t) => (
-                              <MenuItem
-                                key={t.id}
-                                value={t.id}
-                              >
+                              <MenuItem key={t.id} value={t.id}>
                                 {t.full_name || t.email}
                               </MenuItem>
                             ))}

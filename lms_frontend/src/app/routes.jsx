@@ -12,8 +12,10 @@ import TeacherDashboard from "../features/dashboards/TeacherDashboard";
 import StudentDashboard from "../features/dashboards/StudentDashboard";
 import AttendancePage from "../features/dashboards/AttendancePage";
 import Unauthorized from "../features/dashboards/Unauthorized";
+
 import CoursesPage from "../features/courses/CoursesPage";
-import SubjectsPage from "../features/subjects/SubjectsPage"; // ✅ ADD THIS
+import SubjectsPage from "../features/subjects/SubjectsPage";
+import CollegeUsersPage from "../features/users/CollegeUsersPage"
 
 const AppRoutes = () =>
   useRoutes([
@@ -35,14 +37,26 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
+
             {
               path: "/college-admin",
               element: (
-                <RoleGuard allowedRoles={["COLLEGE_ADMIN", "STUDENT"]}>
+                <RoleGuard allowedRoles={["COLLEGE_ADMIN"]}>
                   <CollegeAdminDashboard />
                 </RoleGuard>
               ),
             },
+
+            // ✅ FIXED USERS ROUTE
+            {
+              path: "/college-admin/users",
+              element: (
+                <RoleGuard allowedRoles={["COLLEGE_ADMIN"]}>
+                  <CollegeUsersPage />
+                </RoleGuard>
+              ),
+            },
+
             {
               path: "/teacher",
               element: (
@@ -51,6 +65,7 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
+
             {
               path: "/teacher/attendance",
               element: (
@@ -59,6 +74,7 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
+
             {
               path: "/student",
               element: (
@@ -67,6 +83,7 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
+
             {
               path: "/courses",
               element: (
@@ -82,7 +99,6 @@ const AppRoutes = () =>
               ),
             },
 
-            // ✅ NEW SUBJECT MANAGEMENT ROUTE
             {
               path: "/courses/:courseId/subjects",
               element: (

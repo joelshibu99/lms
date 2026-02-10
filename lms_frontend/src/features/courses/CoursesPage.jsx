@@ -3,7 +3,6 @@ import { useAuth } from "../../auth/AuthContext";
 import CourseForm from "./CourseForm";
 import { useNavigate } from "react-router-dom";
 
-
 import {
   fetchAdminCourses,
   fetchTeacherCourses,
@@ -29,7 +28,10 @@ import {
   Alert,
   Skeleton,
   Divider,
+  IconButton,
 } from "@mui/material";
+
+import EditIcon from "@mui/icons-material/Edit";
 
 /* =========================
    COMPONENT
@@ -38,9 +40,11 @@ import {
 const CoursesPage = () => {
   const { auth } = useAuth();
   const role = auth?.role;
+  const navigate = useNavigate();
 
   const [courses, setCourses] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingCourse, setEditingCourse] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [snackbar, setSnackbar] = useState({
@@ -48,8 +52,6 @@ const CoursesPage = () => {
     message: "",
     severity: "error",
   });
-  const navigate = useNavigate();
-
 
   /* =========================
      LOAD COURSES
@@ -93,6 +95,7 @@ const CoursesPage = () => {
 
   return (
     <Box p={3}>
+      {/* ---------- HEADER ---------- */}
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -104,7 +107,10 @@ const CoursesPage = () => {
         {role === "COLLEGE_ADMIN" && (
           <Button
             variant="contained"
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setEditingCourse(null);
+              setShowForm(true);
+            }}
           >
             Create Course
           </Button>
@@ -113,15 +119,20 @@ const CoursesPage = () => {
 
       <Divider sx={{ mb: 3 }} />
 
-      {/* ---------- CREATE COURSE ---------- */}
+      {/* ---------- CREATE / EDIT COURSE ---------- */}
       {showForm && role === "COLLEGE_ADMIN" && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <CourseForm
-              onClose={() => setShowForm(false)}
+              course={editingCourse}
+              onClose={() => {
+                setShowForm(false);
+                setEditingCourse(null);
+              }}
               onSuccess={async () => {
                 await loadCourses();
                 setShowForm(false);
+                setEditingCourse(null);
               }}
             />
           </CardContent>
@@ -152,9 +163,7 @@ const CoursesPage = () => {
                     <TableCell>Name</TableCell>
                     <TableCell>Status</TableCell>
                     {role === "COLLEGE_ADMIN" && (
-                      <TableCell align="right">
-                        Actions
-                      </TableCell>
+                      <TableCell align="right">Actions</TableCell>
                     )}
                   </TableRow>
                 </TableHead>
@@ -167,32 +176,44 @@ const CoursesPage = () => {
 
                       <TableCell>
                         <Chip
-                          label={
-                            course.is_active
-                              ? "Active"
-                              : "Inactive"
-                          }
-                          color={
-                            course.is_active
-                              ? "success"
-                              : "default"
-                          }
+                          label={course.is_active ? "Active" : "Inactive"}
+                          color={course.is_active ? "success" : "default"}
                           size="small"
                         />
                       </TableCell>
 
                       {role === "COLLEGE_ADMIN" && (
                         <TableCell align="right">
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() =>
-                             navigate(`/courses/${course.id}/subjects`)
-                              }
-
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            justifyContent="flex-end"
                           >
-                            Manage Subjects
-                          </Button>
+                            {/* ✏️ EDIT COURSE */}
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setEditingCourse(course);
+                                setShowForm(true);
+                              }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+
+                            {/* 📚 MANAGE SUBJECTS */}
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() =>
+                                navigate(
+                                  `/courses/${course.id}/subjects`,
+                                  { state: { course } }
+                                )
+                              }
+                            >
+                              Manage Subjects
+                            </Button>
+                          </Stack>
                         </TableCell>
                       )}
                     </TableRow>

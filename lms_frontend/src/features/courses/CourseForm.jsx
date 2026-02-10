@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createCourse, fetchSubjects } from "./courses.api";
+import { createCourse, updateCourse } from "./courses.api";
 
 import {
   Box,
@@ -11,22 +11,24 @@ import {
   Snackbar,
   Alert,
   Typography,
-  MenuItem,
-  CircularProgress,
 } from "@mui/material";
 
-const CourseForm = ({ onClose, onSuccess }) => {
+/*
+  CourseForm
+  - Create + Edit course
+  - If `course` prop exists → Edit mode
+*/
+
+const CourseForm = ({ course, onClose, onSuccess }) => {
+  const isEdit = Boolean(course);
+
   const [form, setForm] = useState({
     code: "",
     name: "",
-    subject: "",
     is_active: true,
   });
 
-  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [loadingSubjects, setLoadingSubjects] = useState(true);
-
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -34,23 +36,17 @@ const CourseForm = ({ onClose, onSuccess }) => {
   });
 
   /* =========================
-     LOAD SUBJECTS
+     PREFILL FORM (EDIT MODE)
   ========================== */
-
   useEffect(() => {
-    const loadSubjects = async () => {
-      try {
-        const res = await fetchSubjects();
-        setSubjects(res.data || []);
-      } catch {
-        setSubjects([]);
-      } finally {
-        setLoadingSubjects(false);
-      }
-    };
-
-    loadSubjects();
-  }, []);
+    if (course) {
+      setForm({
+        code: course.code,
+        name: course.name,
+        is_active: course.is_active,
+      });
+    }
+  }, [course]);
 
   /* =========================
      HANDLERS
@@ -69,14 +65,17 @@ const CourseForm = ({ onClose, onSuccess }) => {
     setLoading(true);
 
     try {
-      await createCourse({
-        ...form,
-        subject: Number(form.subject), // IMPORTANT
-      });
+      if (isEdit) {
+        await updateCourse(course.id, form);
+      } else {
+        await createCourse(form);
+      }
 
       setSnackbar({
         open: true,
-        message: "Course created successfully",
+        message: isEdit
+          ? "Course updated successfully"
+          : "Course created successfully",
         severity: "success",
       });
 
@@ -86,7 +85,7 @@ const CourseForm = ({ onClose, onSuccess }) => {
         open: true,
         message:
           err?.response?.data?.detail ||
-          "Failed to create course",
+          "Failed to save course",
         severity: "error",
       });
     } finally {
@@ -103,7 +102,7 @@ const CourseForm = ({ onClose, onSuccess }) => {
       <Box component="form" onSubmit={handleSubmit}>
         <Stack spacing={2.5}>
           <Typography variant="h6">
-            Create New Course
+            {isEdit ? "Update Course" : "Create New Course"}
           </Typography>
 
           <TextField
@@ -113,6 +112,7 @@ const CourseForm = ({ onClose, onSuccess }) => {
             onChange={handleChange}
             required
             fullWidth
+            disabled={isEdit} // 🔒 Code should not change
           />
 
           <TextField
@@ -123,34 +123,6 @@ const CourseForm = ({ onClose, onSuccess }) => {
             required
             fullWidth
           />
-
-          {/* ---------- SUBJECT DROPDOWN ---------- */}
-          <TextField
-            select
-            label="Subject"
-            name="subject"
-            value={form.subject}
-            onChange={handleChange}
-            required
-            fullWidth
-            disabled={loadingSubjects}
-          >
-            {loadingSubjects ? (
-              <MenuItem value="">
-                <CircularProgress size={20} />
-              </MenuItem>
-            ) : subjects.length === 0 ? (
-              <MenuItem value="" disabled>
-                No subjects available
-              </MenuItem>
-            ) : (
-              subjects.map((sub) => (
-                <MenuItem key={sub.id} value={sub.id}>
-                  {sub.name}
-                </MenuItem>
-              ))
-            )}
-          </TextField>
 
           <FormControlLabel
             control={
@@ -175,14 +147,13 @@ const CourseForm = ({ onClose, onSuccess }) => {
             <Button
               variant="contained"
               type="submit"
-              disabled={
-                loading ||
-                !form.code ||
-                !form.name ||
-                !form.subject
-              }
+              disabled={loading || !form.name || !form.code}
             >
-              {loading ? "Saving…" : "Save Course"}
+              {loading
+                ? "Saving…"
+                : isEdit
+                ? "Update Course"
+                : "Save Course"}
             </Button>
           </Stack>
         </Stack>

@@ -32,3 +32,7 @@ export const enrollStudent = (courseId, studentId) =>
   api.post(`/courses/${courseId}/enroll/`, {
     student_id: studentId,
   });
+/* ───────── UPDATE COURSE (ADMIN) ───────── */
+
+export const updateCourse = (courseId, data) =>
+  api.patch(`/courses/${courseId}/`, data);

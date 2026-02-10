@@ -1,6 +1,7 @@
 import { Box, Toolbar } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
+
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
@@ -17,29 +18,33 @@ const AppLayout = () => {
         bgcolor: "background.default",
       }}
     >
+      {/* ---------- TOP BAR ---------- */}
       <Topbar
         drawerWidth={drawerWidth}
         onMenuClick={() => setMobileOpen(true)}
       />
 
+      {/* ---------- SIDEBAR ---------- */}
       <Sidebar
         drawerWidth={drawerWidth}
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
       />
 
-      {/* MAIN CONTENT */}
+      {/* ---------- MAIN CONTENT ---------- */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           ml: { md: `${drawerWidth}px` },
-          pt: 8, // space for Topbar
           px: { xs: 2, md: 4 },
           pb: 4,
         }}
       >
-        {/* CONTENT CONTAINER */}
+        {/* Spacer for fixed Topbar */}
+        <Toolbar />
+
+        {/* Page content container */}
         <Box
           sx={{
             maxWidth: 1400,
