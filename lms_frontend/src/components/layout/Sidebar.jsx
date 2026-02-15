@@ -7,12 +7,15 @@ import {
   Toolbar,
   Divider,
 } from "@mui/material";
+
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import SchoolIcon from "@mui/icons-material/School";
 import PeopleIcon from "@mui/icons-material/People";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 
@@ -71,8 +74,8 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose }) => {
   const { auth } = useAuth();
 
   /**
-   * 🔐 FINAL ROLE-BASED SIDEBAR CONFIG
-   * Single source of truth
+   * 🔐 ROLE-BASED SIDEBAR CONFIG
+   * Clean SaaS navigation structure
    */
   const sidebarConfig = {
     SYSTEM_ADMIN: [
@@ -113,9 +116,19 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose }) => {
         to: "/teacher",
       },
       {
+        label: "Marks",
+        icon: <SchoolIcon />,
+        to: "/teacher/marks",
+      },
+      {
         label: "Attendance",
         icon: <EventAvailableIcon />,
         to: "/teacher/attendance",
+      },
+      {
+        label: "AI Reports",
+        icon: <AutoAwesomeIcon />,
+        to: "/teacher/ai-reports",
       },
       {
         label: "Courses",

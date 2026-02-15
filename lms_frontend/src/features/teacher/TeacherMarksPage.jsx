@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "../../api/axios";
+import {
+  fetchTeacherMarks,
+  createMark,
+  updateMark,
+} from "../../api/marks.api";
+
 import Page from "../../components/common/Page";
 
 import {
@@ -14,9 +20,6 @@ import {
   Grid,
   Paper,
   Box,
-  Chip,
-  ToggleButton,
-  ToggleButtonGroup,
   Snackbar,
   Alert,
   Skeleton,
@@ -28,20 +31,19 @@ import {
   TableRow,
 } from "@mui/material";
 
-/* =========================
-   COMPONENT
-========================== */
-
-const AttendancePage = () => {
+const TeacherMarksPage = () => {
   const [students, setStudents] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [todayAttendance, setTodayAttendance] = useState([]);
+  const [marks, setMarks] = useState([]);
 
   const [form, setForm] = useState({
     student: "",
     subject: "",
-    is_present: true,
+    marks_obtained: "",
+    remarks: "",
   });
+
+  const [editingId, setEditingId] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -52,8 +54,6 @@ const AttendancePage = () => {
     severity: "success",
   });
 
-  const today = new Date().toISOString().split("T")[0];
-
   /* =========================
      LOAD DATA
   ========================== */
@@ -62,41 +62,29 @@ const AttendancePage = () => {
     const loadInitialData = async () => {
       setPageLoading(true);
       try {
-        const [studentsRes, subjectsRes, attendanceRes] =
+        const [studentsRes, subjectsRes, marksRes] =
           await Promise.all([
             axios.get("accounts/teacher-students/"),
             axios.get("academics/teacher-subjects/"),
-            axios.get("attendance/attendance/"),
+            fetchTeacherMarks(),
           ]);
 
         setStudents(studentsRes.data?.results || []);
         setSubjects(subjectsRes.data?.results || []);
-
-        const todayData = (attendanceRes.data?.results || []).filter(
-          (a) => a.date === today
-        );
-        setTodayAttendance(todayData);
+        setMarks(marksRes?.results || marksRes || []);
       } catch (error) {
-        console.error("Attendance page load failed:", error);
-        setTodayAttendance([]);
+        console.error("Marks page load failed:", error);
       } finally {
         setPageLoading(false);
       }
     };
 
     loadInitialData();
-  }, [today]);
+  }, []);
 
-  /* =========================
-     HELPERS
-  ========================== */
-
-  const reloadTodayAttendance = async () => {
-    const res = await axios.get("attendance/attendance/");
-    const todayData = (res.data?.results || []).filter(
-      (a) => a.date === today
-    );
-    setTodayAttendance(todayData);
+  const reloadMarks = async () => {
+    const res = await fetchTeacherMarks();
+    setMarks(res?.results || res || []);
   };
 
   const showSnackbar = (message, severity = "success") => {
@@ -111,25 +99,49 @@ const AttendancePage = () => {
     setLoading(true);
 
     try {
-      await axios.post("attendance/attendance/", {
-        student: Number(form.student),
-        subject: Number(form.subject),
-        date: today,
-        is_present: form.is_present,
-      });
+      if (editingId) {
+        await updateMark(editingId, {
+          marks_obtained: Number(form.marks_obtained),
+          remarks: form.remarks,
+        });
+        showSnackbar("Marks updated successfully");
+      } else {
+        await createMark({
+          student: Number(form.student),
+          subject: Number(form.subject),
+          marks_obtained: Number(form.marks_obtained),
+          remarks: form.remarks,
+        });
+        showSnackbar("Marks added successfully");
+      }
 
-      showSnackbar("Attendance marked successfully", "success");
-      setForm({ student: "", subject: "", is_present: true });
-      await reloadTodayAttendance();
+      setForm({
+        student: "",
+        subject: "",
+        marks_obtained: "",
+        remarks: "",
+      });
+      setEditingId(null);
+
+      await reloadMarks();
     } catch (e) {
       showSnackbar(
-        e?.response?.data?.detail ||
-          "Attendance already marked for today",
+        e?.response?.data?.detail || "Failed to save marks",
         "error"
       );
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEdit = (row) => {
+    setEditingId(row.id);
+    setForm({
+      student: row.student,
+      subject: row.subject,
+      marks_obtained: row.marks_obtained,
+      remarks: row.remarks || "",
+    });
   };
 
   /* =========================
@@ -138,8 +150,8 @@ const AttendancePage = () => {
 
   return (
     <Page
-      title="Mark Attendance"
-      subtitle="Select a student and subject to record today’s attendance"
+      title="Marks Management"
+      subtitle="Add and manage student marks"
     >
       <Grid container spacing={4}>
         {/* ---------- FORM ---------- */}
@@ -155,12 +167,11 @@ const AttendancePage = () => {
                     setForm({ ...form, student: e.target.value })
                   }
                   fullWidth
+                  disabled={editingId !== null}
                 >
                   {students.map((s) => (
                     <MenuItem key={s.id} value={s.id}>
-                      {s.first_name && s.last_name
-                        ? `${s.first_name} ${s.last_name}`
-                        : s.full_name}
+                      {s.full_name}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -173,6 +184,7 @@ const AttendancePage = () => {
                     setForm({ ...form, subject: e.target.value })
                   }
                   fullWidth
+                  disabled={editingId !== null}
                 >
                   {subjects.map((sub) => (
                     <MenuItem key={sub.id} value={sub.id}>
@@ -181,52 +193,65 @@ const AttendancePage = () => {
                   ))}
                 </TextField>
 
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ mb: 1, color: "text.secondary" }}
-                  >
-                    Attendance Status
-                  </Typography>
+                <TextField
+                  label="Marks Obtained"
+                  value={form.marks_obtained}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ""); // allow digits only
 
-                  <ToggleButtonGroup
-                    fullWidth
-                    exclusive
-                    value={form.is_present}
-                    onChange={(_, value) =>
-                      value !== null &&
-                      setForm({ ...form, is_present: value })
+                    if (value === "") {
+                      setForm({ ...form, marks_obtained: "" });
+                      return;
                     }
-                  >
-                    <ToggleButton value={true} color="success">
-                      Present
-                    </ToggleButton>
-                    <ToggleButton value={false} color="error">
-                      Absent
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                </Box>
 
-                <TextField label="Date" value={today} disabled />
+                    const numeric = Number(value);
+
+                    if (numeric <= 100) {
+                      setForm({ ...form, marks_obtained: numeric });
+                    }
+                  }}
+                  fullWidth
+                  inputProps={{
+                    inputMode: "numeric",
+                    pattern: "[0-9]*",
+                  }}
+                />
+
+
+                <TextField
+                  label="Remarks"
+                  value={form.remarks}
+                  onChange={(e) =>
+                    setForm({ ...form, remarks: e.target.value })
+                  }
+                  fullWidth
+                />
 
                 <Button
                   variant="contained"
                   onClick={handleSubmit}
                   disabled={
-                    loading || !form.student || !form.subject
+                    loading ||
+                    !form.student ||
+                    !form.subject ||
+                    !form.marks_obtained
                   }
                 >
-                  {loading ? "Saving..." : "Submit Attendance"}
+                  {loading
+                    ? "Saving..."
+                    : editingId
+                    ? "Update Marks"
+                    : "Add Marks"}
                 </Button>
               </Stack>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* ---------- TODAY ATTENDANCE ---------- */}
+        {/* ---------- MARKS TABLE ---------- */}
         <Grid item xs={12} md={7}>
           <Typography variant="h6" gutterBottom>
-            Today’s Attendance
+            Marks Entered
           </Typography>
 
           <Paper elevation={1}>
@@ -236,7 +261,8 @@ const AttendancePage = () => {
                   <TableRow>
                     <TableCell>Student</TableCell>
                     <TableCell>Subject</TableCell>
-                    <TableCell>Status</TableCell>
+                    <TableCell>Marks</TableCell>
+                    <TableCell>Remarks</TableCell>
                   </TableRow>
                 </TableHead>
 
@@ -246,35 +272,33 @@ const AttendancePage = () => {
                       <TableRow key={i}>
                         <TableCell><Skeleton /></TableCell>
                         <TableCell><Skeleton /></TableCell>
-                        <TableCell><Skeleton width={80} /></TableCell>
+                        <TableCell><Skeleton /></TableCell>
+                        <TableCell><Skeleton /></TableCell>
                       </TableRow>
                     ))
-                  ) : todayAttendance.length === 0 ? (
+                  ) : marks.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={3}>
-                        <Typography align="center" color="text.secondary">
-                          No attendance marked today
+                      <TableCell colSpan={4}>
+                        <Typography
+                          align="center"
+                          color="text.secondary"
+                        >
+                          No marks entered yet
                         </Typography>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    todayAttendance.map((a) => (
-                      <TableRow key={a.id} hover>
-                        <TableCell>
-                          {a.student_name || a.student_email}
-                        </TableCell>
-                        <TableCell>{a.subject_name}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={
-                              a.is_present ? "Present" : "Absent"
-                            }
-                            color={
-                              a.is_present ? "success" : "error"
-                            }
-                            size="small"
-                          />
-                        </TableCell>
+                    marks.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        hover
+                        onClick={() => handleEdit(row)}
+                        sx={{ cursor: "pointer" }}
+                      >
+                        <TableCell>{row.student_name}</TableCell>
+                        <TableCell>{row.subject_name}</TableCell>
+                        <TableCell>{row.marks_obtained}</TableCell>
+                        <TableCell>{row.remarks}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -309,4 +333,4 @@ const AttendancePage = () => {
   );
 };
 
-export default AttendancePage;
+export default TeacherMarksPage;

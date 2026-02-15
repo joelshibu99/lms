@@ -62,6 +62,9 @@ class MarksSerializer(serializers.ModelSerializer):
     student_email = serializers.CharField(
         source="student.email", read_only=True
     )
+    student_name = serializers.CharField(  # ✅ ADDED
+        source="student.full_name", read_only=True
+    )
     teacher_name = serializers.CharField(
         source="teacher.full_name", read_only=True
     )
@@ -72,6 +75,7 @@ class MarksSerializer(serializers.ModelSerializer):
             "id",
             "student",
             "student_email",
+            "student_name",  # ✅ ADDED
             "subject",
             "subject_name",
             "course_code",

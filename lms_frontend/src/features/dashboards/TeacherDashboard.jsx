@@ -195,25 +195,10 @@ const TeacherDashboard = () => {
 
   return (
     <Page
-      title="Teacher Dashboard"
-      subtitle="Overview of your academic activity and attendance"
-      actions={
-        <>
-          <Button variant="contained" onClick={openAdd}>
-            Add Marks
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => navigate("/teacher/attendance")}
-          >
-            Mark Attendance
-          </Button>
-          <Button variant="outlined" onClick={handleGenerateAIReport}>
-            Generate AI Report
-          </Button>
-        </>
-      }
-    >
+  title="Teacher Dashboard"
+  subtitle="Overview of your academic activity and attendance"
+>
+
       {/* ---------- METRICS ---------- */}
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={3}>

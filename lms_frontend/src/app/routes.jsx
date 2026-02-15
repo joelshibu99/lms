@@ -15,8 +15,12 @@ import Unauthorized from "../features/dashboards/Unauthorized";
 
 import CoursesPage from "../features/courses/CoursesPage";
 import SubjectsPage from "../features/subjects/SubjectsPage";
-import CollegeUsersPage from "../features/users/CollegeUsersPage"
+import CollegeUsersPage from "../features/users/CollegeUsersPage";
 import CourseEnrollmentsPage from "../features/courses/CourseEnrollmentsPage";
+
+// ✅ NEW IMPORTS
+import TeacherMarksPage from "../features/teacher/TeacherMarksPage";
+import TeacherAIReportsPage from "../features/teacher/TeacherAIReportsPage";
 
 const AppRoutes = () =>
   useRoutes([
@@ -30,6 +34,7 @@ const AppRoutes = () =>
         {
           element: <AppLayout />,
           children: [
+            /* ---------------- SYSTEM ADMIN ---------------- */
             {
               path: "/system-admin",
               element: (
@@ -39,6 +44,7 @@ const AppRoutes = () =>
               ),
             },
 
+            /* ---------------- COLLEGE ADMIN ---------------- */
             {
               path: "/college-admin",
               element: (
@@ -47,8 +53,6 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
-
-            // ✅ FIXED USERS ROUTE
             {
               path: "/college-admin/users",
               element: (
@@ -58,6 +62,7 @@ const AppRoutes = () =>
               ),
             },
 
+            /* ---------------- TEACHER ---------------- */
             {
               path: "/teacher",
               element: (
@@ -66,7 +71,14 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
-
+            {
+              path: "/teacher/marks",
+              element: (
+                <RoleGuard allowedRoles={["TEACHER"]}>
+                  <TeacherMarksPage />
+                </RoleGuard>
+              ),
+            },
             {
               path: "/teacher/attendance",
               element: (
@@ -75,7 +87,16 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
+            {
+              path: "/teacher/ai-reports",
+              element: (
+                <RoleGuard allowedRoles={["TEACHER"]}>
+                  <TeacherAIReportsPage />
+                </RoleGuard>
+              ),
+            },
 
+            /* ---------------- STUDENT ---------------- */
             {
               path: "/student",
               element: (
@@ -85,6 +106,7 @@ const AppRoutes = () =>
               ),
             },
 
+            /* ---------------- COURSES ---------------- */
             {
               path: "/courses",
               element: (
@@ -99,7 +121,6 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
-
             {
               path: "/courses/:courseId/subjects",
               element: (
@@ -109,15 +130,15 @@ const AppRoutes = () =>
               ),
             },
             {
-            path: "/courses/:courseId/enrollments",
-            element: (
-              <RoleGuard allowedRoles={["COLLEGE_ADMIN"]}>
-                <CourseEnrollmentsPage />
-              </RoleGuard>
-            ),
-          },
+              path: "/courses/:courseId/enrollments",
+              element: (
+                <RoleGuard allowedRoles={["COLLEGE_ADMIN"]}>
+                  <CourseEnrollmentsPage />
+                </RoleGuard>
+              ),
+            },
 
-
+            /* ---------------- UNAUTHORIZED ---------------- */
             {
               path: "/unauthorized",
               element: <Unauthorized />,

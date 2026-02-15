@@ -15,6 +15,12 @@ from lms_apps.accounts.permissions import IsTeacher, IsStudent
 from lms_apps.courses.models import Course
 from lms_apps.accounts.models import User
 
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticated
+from lms_apps.accounts.permissions import IsTeacher
+from .models import Subject
+from .serializers import SubjectSerializer
+
 
 # ─────────────────────────────────────────
 # TEACHER – MARKS CRUD
@@ -174,5 +180,14 @@ class SubjectViewSet(ModelViewSet):
 
     def get_queryset(self):
         return Subject.objects.filter(
+            college=self.request.user.college
+        )
+class TeacherSubjectsView(ListAPIView):
+    serializer_class = SubjectSerializer
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get_queryset(self):
+        return Subject.objects.filter(
+            teacher=self.request.user,
             college=self.request.user.college
         )

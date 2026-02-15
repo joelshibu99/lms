@@ -4,6 +4,10 @@ from lms_apps.core.constants import UserRole
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
+# ─────────────────────────────────────────
+# GENERAL USER SERIALIZER
+# ─────────────────────────────────────────
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -15,6 +19,10 @@ class UserSerializer(serializers.ModelSerializer):
             "is_active",
         ]
 
+
+# ─────────────────────────────────────────
+# COLLEGE ADMIN - CREATE USER
+# ─────────────────────────────────────────
 
 class CollegeUserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -51,6 +59,10 @@ class CollegeUserCreateSerializer(serializers.ModelSerializer):
         return user
 
 
+# ─────────────────────────────────────────
+# JWT LOGIN SERIALIZER
+# ─────────────────────────────────────────
+
 class LoginTokenSerializer(TokenObtainPairSerializer):
     """
     Custom JWT login serializer
@@ -61,7 +73,22 @@ class LoginTokenSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         data["role"] = self.user.role
         return data
+
+
+# ─────────────────────────────────────────
+# TEACHER → STUDENT LIST SERIALIZER
+# ─────────────────────────────────────────
+
 class StudentListSerializer(serializers.ModelSerializer):
+    """
+    Used in:
+    /api/accounts/teacher-students/
+    """
+
     class Meta:
         model = User
-        fields = ["id", "email"]
+        fields = [
+            "id",
+            "email",
+            "full_name",
+        ]
