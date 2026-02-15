@@ -35,8 +35,9 @@ class UserViewSet(ModelViewSet):
 
     def get_queryset(self):
         return User.objects.filter(
-            college=self.request.user.college
-        )
+        college=self.request.user.college
+    ).exclude(id=self.request.user.id)
+
 
     def get_serializer_class(self):
         if self.action == "create":
