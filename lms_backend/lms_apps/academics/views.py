@@ -161,3 +161,18 @@ class AssignSubjectTeacherView(CreateAPIView):
             {"detail": "Teacher assigned to subject"},
             status=status.HTTP_200_OK
         )
+# ─────────────────────────────────────────
+# ALL SUBJECTS (College-wide)
+# ─────────────────────────────────────────
+class SubjectViewSet(ModelViewSet):
+    """
+    College Admin:
+    - View all subjects in their college
+    """
+    serializer_class = SubjectSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Subject.objects.filter(
+            college=self.request.user.college
+        )

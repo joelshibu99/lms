@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createCourse, updateCourse } from "./courses.api";
+import { createCourse, updateCourse } from "../../api/courses.api";
 
 import {
   Box,

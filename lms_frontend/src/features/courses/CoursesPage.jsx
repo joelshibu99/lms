@@ -7,7 +7,7 @@ import {
   fetchAdminCourses,
   fetchTeacherCourses,
   fetchStudentCourses,
-} from "./courses.api";
+} from "../../api/courses.api";
 
 import {
   Box,
@@ -213,6 +213,19 @@ const CoursesPage = () => {
                             >
                               Manage Subjects
                             </Button>
+                            <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() =>
+                              navigate(
+                                `/courses/${course.id}/enrollments`,
+                                { state: { course } }
+                              )
+                            }
+                          >
+                            Manage Enrollments
+                          </Button>
+
                           </Stack>
                         </TableCell>
                       )}

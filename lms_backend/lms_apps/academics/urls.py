@@ -7,23 +7,22 @@ from lms_apps.academics.views import (
     CourseSubjectListView,
     CourseSubjectCreateView,
     AssignSubjectTeacherView,
+    SubjectViewSet,   # ✅ ADD THIS
 )
 
 router = DefaultRouter()
 router.register(r"marks", MarksViewSet, basename="marks")
+router.register(r"subjects", SubjectViewSet, basename="subjects")  # ✅ ADD THIS
 
 urlpatterns = [
-    # Student academic history
     path(
         "student-history/",
         StudentAcademicHistoryView.as_view(),
         name="student-academic-history",
     ),
 
-    # Marks CRUD (teacher)
     path("", include(router.urls)),
 
-    # Subjects under a course
     path(
         "courses/<int:course_id>/subjects/",
         CourseSubjectListView.as_view(),
@@ -35,7 +34,6 @@ urlpatterns = [
         name="course-subjects-create",
     ),
 
-    # Assign teacher to subject
     path(
         "subjects/<int:subject_id>/assign-teacher/",
         AssignSubjectTeacherView.as_view(),

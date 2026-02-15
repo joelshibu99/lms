@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchCollegeUsers } from "../../api/users.api";
+import { fetchAdminCourses } from "../../api/courses.api";
+import { fetchSubjects } from "../../api/subjects.api";
 
 import Page from "../../components/common/Page";
 import MetricCard from "../../components/common/MetricCard";
@@ -7,11 +9,11 @@ import MetricCard from "../../components/common/MetricCard";
 import SchoolIcon from "@mui/icons-material/School";
 import PeopleIcon from "@mui/icons-material/People";
 import GroupsIcon from "@mui/icons-material/Groups";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import ClassIcon from "@mui/icons-material/Class";
 
 import {
   Grid,
-  Card,
-  CardContent,
   Typography,
   Table,
   TableHead,
@@ -24,45 +26,43 @@ import {
   Stack,
 } from "@mui/material";
 
-/* =========================
-   COMPONENT
-========================== */
-
 const CollegeAdminDashboard = () => {
   const [users, setUsers] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* =========================
-     LOAD DATA
-  ========================== */
-
   useEffect(() => {
-    const loadUsers = async () => {
+    const loadData = async () => {
       try {
-        const data = await fetchCollegeUsers();
-        setUsers(data || []);
+        const usersData = await fetchCollegeUsers();
+        const coursesRes = await fetchAdminCourses(); // ✅ FIXED
+        const subjectsData = await fetchSubjects();
+
+        setUsers(usersData || []);
+        setCourses(coursesRes?.data || []); // ✅ FIXED
+        setSubjects(subjectsData || []);
       } catch (error) {
-        console.error("Failed to load users", error);
-        setUsers([]);
+        console.error("Failed to load dashboard data", error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadUsers();
+    loadData();
   }, []);
 
   /* =========================
      CALCULATIONS
   ========================== */
 
+  const totalUsers = users.length;
+  const activeUsers = users.filter((u) => u.is_active).length;
   const teachersCount = users.filter((u) => u.role === "TEACHER").length;
   const studentsCount = users.filter((u) => u.role === "STUDENT").length;
-  const totalUsers = users.length;
 
-  /* =========================
-     RENDER
-  ========================== */
+  const totalCourses = courses.length;
+  const totalSubjects = subjects.length;
 
   return (
     <Page
@@ -71,7 +71,7 @@ const CollegeAdminDashboard = () => {
     >
       {/* ---------- METRICS ---------- */}
       <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             label="Total Users"
             value={loading ? "—" : totalUsers}
@@ -79,7 +79,15 @@ const CollegeAdminDashboard = () => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            label="Active Users"
+            value={loading ? "—" : activeUsers}
+            icon={<PeopleIcon />}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             label="Teachers"
             value={loading ? "—" : teachersCount}
@@ -87,16 +95,32 @@ const CollegeAdminDashboard = () => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             label="Students"
             value={loading ? "—" : studentsCount}
             icon={<PeopleIcon />}
           />
         </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            label="Total Courses"
+            value={loading ? "—" : totalCourses}
+            icon={<MenuBookIcon />}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            label="Total Subjects"
+            value={loading ? "—" : totalSubjects}
+            icon={<ClassIcon />}
+          />
+        </Grid>
       </Grid>
 
-      {/* ---------- USERS TABLE ---------- */}
+      {/* ---------- RECENT USERS TABLE ---------- */}
       <Stack spacing={2} sx={{ mt: 5 }}>
         <Typography variant="h6">College Users</Typography>
 
@@ -120,16 +144,8 @@ const CollegeAdminDashboard = () => {
                 </TableRow>
               )}
 
-              {!loading && users.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} align="center">
-                    No users found
-                  </TableCell>
-                </TableRow>
-              )}
-
               {!loading &&
-                users.map((user) => (
+                users.slice(0, 5).map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       {user.full_name || user.email}
@@ -138,7 +154,11 @@ const CollegeAdminDashboard = () => {
                     <TableCell>{user.role}</TableCell>
                     <TableCell>
                       <Chip
-                        label={user.is_active ? "ACTIVE" : "INACTIVE"}
+                        label={
+                          user.is_active
+                            ? "ACTIVE"
+                            : "INACTIVE"
+                        }
                         size="small"
                         sx={{
                           fontWeight: 600,

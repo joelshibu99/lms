@@ -16,6 +16,7 @@ import Unauthorized from "../features/dashboards/Unauthorized";
 import CoursesPage from "../features/courses/CoursesPage";
 import SubjectsPage from "../features/subjects/SubjectsPage";
 import CollegeUsersPage from "../features/users/CollegeUsersPage"
+import CourseEnrollmentsPage from "../features/courses/CourseEnrollmentsPage";
 
 const AppRoutes = () =>
   useRoutes([
@@ -107,6 +108,15 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
+            {
+            path: "/courses/:courseId/enrollments",
+            element: (
+              <RoleGuard allowedRoles={["COLLEGE_ADMIN"]}>
+                <CourseEnrollmentsPage />
+              </RoleGuard>
+            ),
+          },
+
 
             {
               path: "/unauthorized",
