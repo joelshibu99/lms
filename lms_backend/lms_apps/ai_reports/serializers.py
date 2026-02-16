@@ -2,11 +2,12 @@ from rest_framework import serializers
 from .models import AIReport
 
 
-class AIReportCreateSerializer(serializers.Serializer):
-    student_id = serializers.IntegerField()
-
-
 class AIReportReadSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(
+        source="student.full_name",
+        read_only=True
+    )
+
     class Meta:
         model = AIReport
         fields = [

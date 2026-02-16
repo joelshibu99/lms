@@ -1,12 +1,14 @@
 from django.urls import path
-from .views import GenerateAIReportView, StudentAIReportsView
+from .views import (
+    GenerateAIReportView,
+    StudentLatestAIReportView,
+    StudentChatWithAIReportView,
+    TeacherAIReportListView,
+)
 
 urlpatterns = [
     path("generate/", GenerateAIReportView.as_view()),
-    path("my-reports/", StudentAIReportsView.as_view()),
-]
-from .views import TeacherAIReportListView
-
-urlpatterns = [
     path("teacher-reports/", TeacherAIReportListView.as_view()),
+    path("student-latest/", StudentLatestAIReportView.as_view()),
+    path("student-chat/", StudentChatWithAIReportView.as_view()),
 ]

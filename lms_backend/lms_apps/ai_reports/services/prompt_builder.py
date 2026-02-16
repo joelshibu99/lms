@@ -1,19 +1,16 @@
 def build_academic_prompt(student_name, marks_data):
 
-    marks_text = ", ".join(
-        f"{item['subject']} ({item['marks']})"
+    marks_text = "\n".join(
+        f"- {item['subject']}: {item['marks']}"
         for item in marks_data
     )
 
     return f"""
-Give short academic feedback for student {student_name}.
-Marks: {marks_text}.
+Student Name: {student_name}
 
-Provide:
-- Summary
-- Strengths
-- Weakness
-- Improvement tips
+Marks:
+{marks_text}
 
-Keep it under 200 words.
+Write a short academic performance summary in 5 concise bullet points.
+Keep it clear and under 120 words.
 """

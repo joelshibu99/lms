@@ -1,44 +1,42 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListAPIView
 
-from lms_apps.accounts.permissions import IsTeacher, IsStudent
-from lms_apps.academics.models import Marks
 from lms_apps.accounts.models import User
+from lms_apps.academics.models import Marks
 
 from .models import AIReport
-from .serializers import (
-    AIReportCreateSerializer,
-    AIReportReadSerializer,
-)
+from .serializers import AIReportReadSerializer
 from .services.prompt_builder import build_academic_prompt
 from .services.gemini_client import GeminiClient, GeminiServiceError
 
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
-from .models import AIReport
-from .serializers import AIReportReadSerializer
 
-
-
+# ------------------------------
+# GENERATE AI SUMMARY (Teacher)
+# ------------------------------
 class GenerateAIReportView(APIView):
-    permission_classes = [IsTeacher]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # 1. Validate input
-        serializer = AIReportCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        student_id = request.data.get("student_id")
 
-        # 2. Fetch student (college-scoped)
-        student = User.objects.get(
-            id=serializer.validated_data["student_id"],
-            college=request.user.college,
-        )
+        if not student_id:
+            return Response(
+                {"detail": "student_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # 3. Fetch academic marks
-        marks_qs = Marks.objects.filter(
-            student=student
-        ).select_related("subject")
+        try:
+            student = User.objects.get(id=student_id)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "Student not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        marks_qs = Marks.objects.filter(student=student).select_related("subject")
 
         if not marks_qs.exists():
             return Response(
@@ -46,7 +44,6 @@ class GenerateAIReportView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 4. Prepare marks data (Decimal → float for JSON safety)
         marks_data = [
             {
                 "subject": m.subject.name,
@@ -55,68 +52,111 @@ class GenerateAIReportView(APIView):
             for m in marks_qs
         ]
 
-        # 5. Build AI prompt
         prompt = build_academic_prompt(
             student_name=student.email,
             marks_data=marks_data
         )
 
-        print("==== PROMPT START ====")
-        print(prompt)
-        print("==== PROMPT END ====")
-
-
-        # 6. Generate AI feedback (MOCK Gemini)
         gemini = GeminiClient()
 
         try:
             ai_text = gemini.generate_text(prompt)
-            print("AI GENERATED:", ai_text[:200])
         except GeminiServiceError:
             return Response(
-                {"detail": "AI service temporarily unavailable"},
+                {"detail": "AI service unavailable"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
-        # 7. Save AI report
         report = AIReport.objects.create(
-            college=request.user.college,
+            college=student.college,
             student=student,
             generated_by=request.user,
-            input_snapshot={
-                "marks": marks_data,
-                "total_subjects": marks_qs.count(),
-            },
+            input_snapshot={"marks": marks_data},
             ai_feedback=ai_text,
         )
 
-        # 8. Return response
         return Response(
             AIReportReadSerializer(report).data,
             status=status.HTTP_201_CREATED
         )
 
 
-class StudentAIReportsView(APIView):
-    permission_classes = [IsStudent]
-
-    def get(self, request):
-        reports = AIReport.objects.filter(
-            student=request.user,
-            college=request.user.college
-        )
-
-        serializer = AIReportReadSerializer(reports, many=True)
-        return Response(serializer.data)
-
+# ------------------------------
+# TEACHER LIST REPORTS
+# ------------------------------
 class TeacherAIReportListView(ListAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = AIReportReadSerializer
 
     def get_queryset(self):
-        user = self.request.user
         return AIReport.objects.filter(
-            generated_by=user,
-            college=user.college
+            generated_by=self.request.user
         ).order_by("-created_at")
-    
-    serializer_class = AIReportReadSerializer
+
+
+# ------------------------------
+# STUDENT GET LATEST SUMMARY
+# ------------------------------
+class StudentLatestAIReportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        report = AIReport.objects.filter(
+            student=request.user
+        ).order_by("-created_at").first()
+
+        if not report:
+            return Response(
+                {"detail": "No AI report found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response(AIReportReadSerializer(report).data)
+
+
+# ------------------------------
+# STUDENT CHAT WITH SUMMARY
+# ------------------------------
+class StudentChatWithAIReportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        message = request.data.get("message")
+
+        if not message:
+            return Response(
+                {"detail": "Message is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        report = AIReport.objects.filter(
+            student=request.user
+        ).order_by("-created_at").first()
+
+        if not report:
+            return Response(
+                {"detail": "No AI report available"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        prompt = f"""
+        This is the student's academic summary:
+        {report.ai_feedback}
+
+        Student question:
+        {message}
+
+        Answer clearly and concisely.
+        """
+
+        gemini = GeminiClient()
+
+        try:
+            response = gemini.generate_text(prompt)
+        except GeminiServiceError:
+            return Response(
+                {"detail": "AI service unavailable"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
+        return Response({"reply": response})
