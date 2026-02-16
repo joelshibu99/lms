@@ -160,3 +160,16 @@ class StudentChatWithAIReportView(APIView):
             )
 
         return Response({"reply": response})
+from rest_framework.generics import DestroyAPIView
+
+
+class DeleteAIReportView(DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = AIReport.objects.all()
+    serializer_class = AIReportReadSerializer
+
+    def get_queryset(self):
+        # 🔐 Only allow teacher to delete their own reports
+        return AIReport.objects.filter(
+            generated_by=self.request.user
+        )

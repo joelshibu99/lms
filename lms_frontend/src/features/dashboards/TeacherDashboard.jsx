@@ -20,7 +20,6 @@ import EditIcon from "@mui/icons-material/Edit";
 
 import {
   Grid,
-  Stack,
   Typography,
   Table,
   TableHead,
@@ -51,7 +50,6 @@ const TeacherDashboard = () => {
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* Dialog state */
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
@@ -63,16 +61,13 @@ const TeacherDashboard = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  /* AI report */
   const [aiOpen, setAiOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
 
-  /* =========================
-     LOAD DATA
-  ========================== */
+  /* LOAD DATA */
 
   const loadMarks = async () => {
     try {
@@ -98,19 +93,10 @@ const TeacherDashboard = () => {
     );
   }, []);
 
-  /* =========================
-     HANDLERS
-  ========================== */
+  /* HANDLERS */
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-
-  const openAdd = () => {
-    setEditingId(null);
-    setForm({ student: "", subject: "", marks_obtained: "", remarks: "" });
-    setError("");
-    setOpen(true);
-  };
 
   const openEdit = (row) => {
     setEditingId(row.id);
@@ -134,13 +120,6 @@ const TeacherDashboard = () => {
           marks_obtained: Number(form.marks_obtained),
           remarks: form.remarks,
         });
-      } else {
-        await createMark({
-          student: Number(form.student),
-          subject: Number(form.subject),
-          marks_obtained: Number(form.marks_obtained),
-          remarks: form.remarks,
-        });
       }
 
       setOpen(false);
@@ -152,29 +131,7 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleGenerateAIReport = async () => {
-    if (marks.length === 0) {
-      setAiOpen(true);
-      setAiResult("No student data available to generate report.");
-      return;
-    }
-
-    setAiOpen(true);
-    setAiLoading(true);
-
-    try {
-      const res = await generateTeacherReport(marks[0].student);
-      setAiResult(res.ai_feedback || "AI report generated.");
-    } catch {
-      setAiResult("Failed to generate AI report.");
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  /* =========================
-     CALCULATIONS
-  ========================== */
+  /* CALCULATIONS */
 
   const todayAttendance = attendance.filter((a) => a.date === today);
   const todayPresent = todayAttendance.filter((a) => a.is_present).length;
@@ -189,17 +146,14 @@ const TeacherDashboard = () => {
             100
         );
 
-  /* =========================
-     RENDER
-  ========================== */
+  /* RENDER */
 
   return (
     <Page
-  title="Teacher Dashboard"
-  subtitle="Overview of your academic activity and attendance"
->
-
-      {/* ---------- METRICS ---------- */}
+      title="Teacher Dashboard"
+      subtitle="Overview of your academic activity and attendance"
+    >
+      {/* METRICS */}
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={3}>
           <MetricCard
@@ -234,7 +188,7 @@ const TeacherDashboard = () => {
         </Grid>
       </Grid>
 
-      {/* ---------- TABLE SECTION ---------- */}
+      {/* TABLE */}
       <Box sx={{ mt: 5 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
           Marks Entered by You
@@ -255,7 +209,11 @@ const TeacherDashboard = () => {
               {!loading &&
                 marks.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell>{row.student_email}</TableCell>
+                    {/* ✅ CHANGED HERE */}
+                    <TableCell>
+                      {row.student_name || row.student_email}
+                    </TableCell>
+
                     <TableCell>{row.subject_name}</TableCell>
                     <TableCell>{row.marks_obtained}</TableCell>
                     <TableCell align="right">
@@ -278,32 +236,11 @@ const TeacherDashboard = () => {
         </TableContainer>
       </Box>
 
-      {/* ---------- MARKS DIALOG ---------- */}
+      {/* EDIT DIALOG */}
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>{editingId ? "Edit Marks" : "Add Marks"}</DialogTitle>
+        <DialogTitle>Edit Marks</DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
           {error && <Alert severity="error">{error}</Alert>}
-
-          {!editingId && (
-            <>
-              <TextField
-                fullWidth
-                margin="dense"
-                label="Student ID"
-                name="student"
-                value={form.student}
-                onChange={handleChange}
-              />
-              <TextField
-                fullWidth
-                margin="dense"
-                label="Subject ID"
-                name="subject"
-                value={form.subject}
-                onChange={handleChange}
-              />
-            </>
-          )}
 
           <TextField
             fullWidth
@@ -337,7 +274,7 @@ const TeacherDashboard = () => {
         </DialogActions>
       </Dialog>
 
-      {/* ---------- AI REPORT ---------- */}
+      {/* AI REPORT */}
       <Dialog open={aiOpen} onClose={() => setAiOpen(false)} fullWidth maxWidth="md">
         <DialogTitle>AI Performance Report</DialogTitle>
         <DialogContent>

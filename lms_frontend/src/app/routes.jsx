@@ -18,9 +18,9 @@ import SubjectsPage from "../features/subjects/SubjectsPage";
 import CollegeUsersPage from "../features/users/CollegeUsersPage";
 import CourseEnrollmentsPage from "../features/courses/CourseEnrollmentsPage";
 
-// ✅ NEW IMPORTS
 import TeacherMarksPage from "../features/teacher/TeacherMarksPage";
 import TeacherAIReportsPage from "../features/teacher/TeacherAIReportsPage";
+import TeacherStudentsPage from "../features/teacher/TeacherStudentsPage";
 
 const AppRoutes = () =>
   useRoutes([
@@ -34,6 +34,7 @@ const AppRoutes = () =>
         {
           element: <AppLayout />,
           children: [
+
             /* ---------------- SYSTEM ADMIN ---------------- */
             {
               path: "/system-admin",
@@ -71,6 +72,9 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
+
+            /* ✅ ADD THESE TWO (GLOBAL ROUTES FOR SIDEBAR) */
+
             {
               path: "/teacher/marks",
               element: (
@@ -87,6 +91,34 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
+
+            /* ---------------- COURSE BASED ROUTES ---------------- */
+
+            {
+              path: "/teacher/courses/:courseId/marks",
+              element: (
+                <RoleGuard allowedRoles={["TEACHER"]}>
+                  <TeacherMarksPage />
+                </RoleGuard>
+              ),
+            },
+            {
+              path: "/teacher/courses/:courseId/attendance",
+              element: (
+                <RoleGuard allowedRoles={["TEACHER"]}>
+                  <AttendancePage />
+                </RoleGuard>
+              ),
+            },
+            {
+              path: "/teacher/courses/:courseId/students",
+              element: (
+                <RoleGuard allowedRoles={["TEACHER"]}>
+                  <TeacherStudentsPage />
+                </RoleGuard>
+              ),
+            },
+
             {
               path: "/teacher/ai-reports",
               element: (

@@ -63,6 +63,7 @@ const CoursesPage = () => {
     setLoading(true);
     try {
       let res;
+
       if (role === "COLLEGE_ADMIN") {
         res = await fetchAdminCourses();
       } else if (role === "TEACHER") {
@@ -162,7 +163,8 @@ const CoursesPage = () => {
                     <TableCell>Code</TableCell>
                     <TableCell>Name</TableCell>
                     <TableCell>Status</TableCell>
-                    {role === "COLLEGE_ADMIN" && (
+
+                    {(role === "COLLEGE_ADMIN" || role === "TEACHER") && (
                       <TableCell align="right">Actions</TableCell>
                     )}
                   </TableRow>
@@ -172,7 +174,17 @@ const CoursesPage = () => {
                   {courses.map((course) => (
                     <TableRow key={course.id} hover>
                       <TableCell>{course.code}</TableCell>
-                      <TableCell>{course.name}</TableCell>
+
+                      <TableCell>
+                        <Button
+                          variant="text"
+                          onClick={() =>
+                            navigate(`/courses/${course.id}`)
+                          }
+                        >
+                          {course.name}
+                        </Button>
+                      </TableCell>
 
                       <TableCell>
                         <Chip
@@ -182,50 +194,105 @@ const CoursesPage = () => {
                         />
                       </TableCell>
 
-                      {role === "COLLEGE_ADMIN" && (
+                      {(role === "COLLEGE_ADMIN" ||
+                        role === "TEACHER") && (
                         <TableCell align="right">
                           <Stack
                             direction="row"
                             spacing={1}
                             justifyContent="flex-end"
                           >
-                            {/* ✏️ EDIT COURSE */}
-                            <IconButton
-                              size="small"
-                              onClick={() => {
-                                setEditingCourse(course);
-                                setShowForm(true);
-                              }}
-                            >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
+                            {/* ================= ADMIN ACTIONS ================= */}
+                            {role === "COLLEGE_ADMIN" && (
+                              <>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    setEditingCourse(course);
+                                    setShowForm(true);
+                                  }}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
 
-                            {/* 📚 MANAGE SUBJECTS */}
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              onClick={() =>
-                                navigate(
-                                  `/courses/${course.id}/subjects`,
-                                  { state: { course } }
-                                )
-                              }
-                            >
-                              Manage Subjects
-                            </Button>
-                            <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() =>
-                              navigate(
-                                `/courses/${course.id}/enrollments`,
-                                { state: { course } }
-                              )
-                            }
-                          >
-                            Manage Enrollments
-                          </Button>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={() =>
+                                    navigate(
+                                      `/courses/${course.id}/subjects`,
+                                      { state: { course } }
+                                    )
+                                  }
+                                >
+                                  Subjects
+                                </Button>
 
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={() =>
+                                    navigate(
+                                      `/courses/${course.id}/enrollments`,
+                                      { state: { course } }
+                                    )
+                                  }
+                                >
+                                  Enrollments
+                                </Button>
+                              </>
+                            )}
+
+                            {/* ================= TEACHER ACTIONS ================= */}
+                            {role === "TEACHER" && (
+                              <>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={() =>
+                                    navigate(
+                                      `/teacher/courses/${course.id}/students`
+                                    )
+                                  }
+                                >
+                                  Students
+                                </Button>
+
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={() =>
+                                    navigate(
+                                      `/teacher/courses/${course.id}/marks`
+                                    )
+                                  }
+                                >
+                                  Marks
+                                </Button>
+
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={() =>
+                                    navigate(
+                                      `/teacher/courses/${course.id}/attendance`
+                                    )
+                                  }
+                                >
+                                  Attendance
+                                </Button>
+
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  onClick={() =>
+                                    navigate("/teacher/ai-reports")
+                                  }
+                                >
+                                  AI Reports
+                                </Button>
+                              </>
+                            )}
                           </Stack>
                         </TableCell>
                       )}
