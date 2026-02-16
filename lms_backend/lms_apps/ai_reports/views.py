@@ -14,6 +14,12 @@ from .serializers import (
 from .services.prompt_builder import build_academic_prompt
 from .services.gemini_client import GeminiClient, GeminiServiceError
 
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticated
+from .models import AIReport
+from .serializers import AIReportReadSerializer
+
+
 
 class GenerateAIReportView(APIView):
     permission_classes = [IsTeacher]
@@ -55,11 +61,17 @@ class GenerateAIReportView(APIView):
             marks_data=marks_data
         )
 
+        print("==== PROMPT START ====")
+        print(prompt)
+        print("==== PROMPT END ====")
+
+
         # 6. Generate AI feedback (MOCK Gemini)
         gemini = GeminiClient()
 
         try:
             ai_text = gemini.generate_text(prompt)
+            print("AI GENERATED:", ai_text[:200])
         except GeminiServiceError:
             return Response(
                 {"detail": "AI service temporarily unavailable"},
@@ -96,3 +108,15 @@ class StudentAIReportsView(APIView):
 
         serializer = AIReportReadSerializer(reports, many=True)
         return Response(serializer.data)
+
+class TeacherAIReportListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return AIReport.objects.filter(
+            generated_by=user,
+            college=user.college
+        ).order_by("-created_at")
+    
+    serializer_class = AIReportReadSerializer

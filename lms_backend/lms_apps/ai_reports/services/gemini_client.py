@@ -1,3 +1,4 @@
+import requests
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,30 +10,38 @@ class GeminiServiceError(Exception):
 
 class GeminiClient:
     """
-    MOCK Gemini client.
-    Replace with real Gemini implementation by enabling billing.
+    Ollama-based local LLM client (FAST + SAFE)
     """
 
     def __init__(self):
-        pass
+        self.url = "http://localhost:11434/api/generate"
+        self.model = "phi3:mini"  # 🔥 USE MINI MODEL (VERY IMPORTANT)
 
     def generate_text(self, prompt: str) -> str:
-        # Mock AI response (deterministic & viva-safe)
-        return (
-            "Overall Performance:\n"
-            "The student demonstrates a satisfactory academic performance "
-            "with consistent effort across subjects.\n\n"
+        try:
+            response = requests.post(
+                self.url,
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
+                        "num_predict": 150,   # 🔥 SHORTER RESPONSE
+                        "temperature": 0.7
+                    }
+                },
+                timeout=180,
+            )
 
-            "Strengths:\n"
-            "- Regular attendance and participation\n"
-            "- Good understanding of core concepts\n\n"
+            response.raise_for_status()
+            data = response.json()
 
-            "Weak Areas:\n"
-            "- Needs improvement in problem-solving accuracy\n"
-            "- Time management during exams can be improved\n\n"
+            return data.get("response", "").strip()
 
-            "Actionable Suggestions:\n"
-            "- Practice subject-wise tests weekly\n"
-            "- Revise weak topics regularly\n"
-            "- Seek faculty guidance for difficult concepts"
-        )
+        except requests.exceptions.Timeout:
+            logger.error("Ollama timeout error")
+            raise GeminiServiceError("Ollama timeout")
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Ollama error: {e}")
+            raise GeminiServiceError("Ollama service failed")

@@ -11,6 +11,8 @@ class AIReportReadSerializer(serializers.ModelSerializer):
         model = AIReport
         fields = [
             "id",
+            "student",
+            "student_name",
             "ai_feedback",
             "created_at",
         ]

@@ -6,3 +6,7 @@ export const generateTeacherReport = async (studentId) => {
   });
   return res.data;
 };
+export const getTeacherReports = async () => {
+  const res = await axios.get("ai-reports/teacher-reports/");
+  return res.data;
+};
