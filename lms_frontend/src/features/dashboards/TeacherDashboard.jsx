@@ -209,7 +209,7 @@ const TeacherDashboard = () => {
               {!loading &&
                 marks.map((row) => (
                   <TableRow key={row.id}>
-                    {/* ✅ CHANGED HERE */}
+                    {/**/}
                     <TableCell>
                       {row.student_name || row.student_email}
                     </TableCell>

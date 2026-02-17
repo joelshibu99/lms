@@ -15,6 +15,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import InsightsIcon from "@mui/icons-material/Insights";
 
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
@@ -147,6 +148,11 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose }) => {
         label: "Courses",
         icon: <MenuBookIcon />,
         to: "/courses",
+      },
+      {
+        label: "Performance",
+        icon: <InsightsIcon />,
+        to: "/student/performance",
       },
     ],
   };

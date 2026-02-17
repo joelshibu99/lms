@@ -22,6 +22,8 @@ import TeacherMarksPage from "../features/teacher/TeacherMarksPage";
 import TeacherAIReportsPage from "../features/teacher/TeacherAIReportsPage";
 import TeacherStudentsPage from "../features/teacher/TeacherStudentsPage";
 
+import StudentPerformance from "../features/student/StudentPerformance"; // ✅ ADDED
+
 const AppRoutes = () =>
   useRoutes([
     {
@@ -29,7 +31,7 @@ const AppRoutes = () =>
       element: <Login />,
     },
     {
-      element: <ProtectedRoute />,
+      element: <ProtectedRoute />, // 🔐 Global protection
       children: [
         {
           element: <AppLayout />,
@@ -72,9 +74,6 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
-
-            /* ✅ ADD THESE TWO (GLOBAL ROUTES FOR SIDEBAR) */
-
             {
               path: "/teacher/marks",
               element: (
@@ -91,9 +90,6 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
-
-            /* ---------------- COURSE BASED ROUTES ---------------- */
-
             {
               path: "/teacher/courses/:courseId/marks",
               element: (
@@ -118,7 +114,6 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
-
             {
               path: "/teacher/ai-reports",
               element: (
@@ -134,6 +129,14 @@ const AppRoutes = () =>
               element: (
                 <RoleGuard allowedRoles={["STUDENT"]}>
                   <StudentDashboard />
+                </RoleGuard>
+              ),
+            },
+            {
+              path: "/student/performance",
+              element: (
+                <RoleGuard allowedRoles={["STUDENT"]}>
+                  <StudentPerformance />
                 </RoleGuard>
               ),
             },
