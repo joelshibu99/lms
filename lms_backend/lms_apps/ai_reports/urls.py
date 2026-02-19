@@ -5,6 +5,7 @@ from .views import (
     StudentChatWithAIReportView,
     TeacherAIReportListView,
     DeleteAIReportView,
+    StudentAIReportListView,
 )
 
 urlpatterns = [
@@ -13,4 +14,6 @@ urlpatterns = [
     path("<int:pk>/", DeleteAIReportView.as_view()),  
     path("student-latest/", StudentLatestAIReportView.as_view()),
     path("student-chat/", StudentChatWithAIReportView.as_view()),
+    path("my-reports/", StudentAIReportListView.as_view()),
+
 ]

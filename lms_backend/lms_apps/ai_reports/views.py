@@ -173,3 +173,14 @@ class DeleteAIReportView(DestroyAPIView):
         return AIReport.objects.filter(
             generated_by=self.request.user
         )
+# ------------------------------
+# STUDENT LIST ALL REPORTS
+# ------------------------------
+class StudentAIReportListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = AIReportReadSerializer
+
+    def get_queryset(self):
+        return AIReport.objects.filter(
+            student=self.request.user
+        ).order_by("-created_at")

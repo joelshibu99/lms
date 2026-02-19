@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .models import Course, Enrollment
-from .serializers import CourseSerializer, EnrolledCourseSerializer
+from .serializers import CourseSerializer
+
 
 
 # ─────────────────────────────────────────
@@ -78,18 +79,19 @@ class StudentCoursesView(APIView):
 
     def get(self, request):
         if request.user.role != "STUDENT":
-            return Response(
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         enrollments = Enrollment.objects.filter(
             student=request.user
-        )
+        ).select_related("course")
+
+        courses = [enrollment.course for enrollment in enrollments]
 
         return Response(
-            EnrolledCourseSerializer(enrollments, many=True).data,
+            CourseSerializer(courses, many=True).data,
             status=status.HTTP_200_OK
         )
+
 from lms_apps.accounts.models import User
 from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView
 
@@ -97,21 +99,60 @@ from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView
 # ─────────────────────────────────────────
 # COLLEGE ADMIN – LIST ENROLLED STUDENTS
 # ─────────────────────────────────────────
-class CourseEnrollmentListView(ListAPIView):
+from lms_apps.academics.models import Subject
+
+
+class CourseEnrollmentListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id):
-        if request.user.role != "COLLEGE_ADMIN":
-            return Response(status=status.HTTP_403_FORBIDDEN)
 
-        enrollments = Enrollment.objects.filter(
-            course__id=course_id,
-            course__college=request.user.college
-        ).select_related("student")
+        # Get course within same college
+        try:
+            course = Course.objects.get(
+                id=course_id,
+                college=request.user.college
+            )
+        except Course.DoesNotExist:
+            return Response(
+                {"detail": "Course not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # ✅ College Admin → full access
+        if request.user.role == "COLLEGE_ADMIN":
+
+            enrollments = Enrollment.objects.filter(
+                course=course
+            ).select_related("student")
+
+        # ✅ Teacher → only if assigned to subject in this course
+        elif request.user.role == "TEACHER":
+
+            is_assigned = Subject.objects.filter(
+                course=course,
+                teacher=request.user
+            ).exists()
+
+            if not is_assigned:
+                return Response(
+                    {"detail": "Not allowed"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            enrollments = Enrollment.objects.filter(
+                course=course
+            ).select_related("student")
+
+        else:
+            return Response(
+                {"detail": "Not allowed"},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         data = [
             {
-                "id": e.id,
+                "id": e.student.id,
                 "student_id": e.student.id,
                 "email": e.student.email,
                 "full_name": e.student.full_name,

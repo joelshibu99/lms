@@ -19,17 +19,21 @@ def predict_risk(avg_marks, attendance_percentage):
     """
     Predict whether a student is SAFE or AT_RISK
 
-    Inputs:
-    - avg_marks (float)
-    - attendance_percentage (float)
-
-    Output:
-    - "SAFE" or "AT_RISK"
+    Returns:
+    {
+        "label": "SAFE" | "AT_RISK",
+        "probability": float
+    }
     """
 
     features = np.array([[avg_marks, attendance_percentage]])
-    prediction = model.predict(features)[0]
 
-    if prediction == 1:
-        return "AT_RISK"
-    return "SAFE"
+    prediction = model.predict(features)[0]
+    probability = model.predict_proba(features)[0][1]
+
+    label = "AT_RISK" if prediction == 1 else "SAFE"
+
+    return {
+        "label": label,
+        "probability": round(float(probability), 2)
+    }

@@ -132,6 +132,12 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose }) => {
         to: "/teacher/ai-reports",
       },
       {
+      label: "Student Risk",
+      icon: <InsightsIcon />,
+      to: "/teacher/risk",
+    },
+
+      {
         label: "Courses",
         icon: <MenuBookIcon />,
         to: "/courses",

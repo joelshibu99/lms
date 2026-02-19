@@ -46,7 +46,13 @@ const StudentDashboard = () => {
     const fetchStudentMarks = async () => {
       try {
         const res = await axios.get("academics/student-history/");
-        setMarks(res.data?.results || []);
+        const marksData =
+  Array.isArray(res.data)
+    ? res.data
+    : res.data?.results || [];
+
+setMarks(marksData);
+
       } catch {
         setMarks([]);
       } finally {
@@ -55,26 +61,40 @@ const StudentDashboard = () => {
     };
 
     const fetchAIReports = async () => {
-      try {
-        const res = await axios.get("ai-reports/my-reports/");
-        setReports(res.data || []);
-      } catch {
-        setReports([]);
-      } finally {
-        setLoadingReports(false);
-      }
-    };
+  try {
+    const res = await axios.get("ai-reports/my-reports/");
+
+    const reportsData =
+      Array.isArray(res.data)
+        ? res.data
+        : res.data?.results || [];
+
+    setReports(reportsData);
+  } catch {
+    setReports([]);
+  } finally {
+    setLoadingReports(false);
+  }
+};
+
 
     const fetchAttendance = async () => {
-      try {
-        const res = await axios.get("attendance/my-attendance/");
-        setAttendance(res.data || []);
-      } catch {
-        setAttendance([]);
-      } finally {
-        setLoadingAttendance(false);
-      }
-    };
+  try {
+    const res = await axios.get("attendance/my-attendance/");
+
+    const attendanceData =
+      Array.isArray(res.data)
+        ? res.data
+        : res.data?.results || [];
+
+    setAttendance(attendanceData);
+  } catch {
+    setAttendance([]);
+  } finally {
+    setLoadingAttendance(false);
+  }
+};
+
 
     fetchStudentMarks();
     fetchAIReports();

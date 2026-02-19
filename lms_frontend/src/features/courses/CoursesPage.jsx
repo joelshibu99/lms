@@ -58,6 +58,7 @@ const CoursesPage = () => {
   ========================== */
 
   const loadCourses = async () => {
+    
     if (!role) return;
 
     setLoading(true);
@@ -71,8 +72,14 @@ const CoursesPage = () => {
       } else if (role === "STUDENT") {
         res = await fetchStudentCourses();
       }
+        console.log("Student API response:", res.data);
+      const coursesData =
+  Array.isArray(res?.data)
+    ? res.data
+    : res?.data?.results || [];
 
-      setCourses(res?.data || []);
+setCourses(coursesData);
+
     } catch {
       setCourses([]);
       setSnackbar({
@@ -164,9 +171,11 @@ const CoursesPage = () => {
                     <TableCell>Name</TableCell>
                     <TableCell>Status</TableCell>
 
-                    {(role === "COLLEGE_ADMIN" || role === "TEACHER") && (
-                      <TableCell align="right">Actions</TableCell>
-                    )}
+                    <TableCell align="right">
+                      {role === "STUDENT" ? "My Tools" : "Actions"}
+                    </TableCell>
+
+
                   </TableRow>
                 </TableHead>
 
@@ -194,108 +203,114 @@ const CoursesPage = () => {
                         />
                       </TableCell>
 
-                      {(role === "COLLEGE_ADMIN" ||
-                        role === "TEACHER") && (
-                        <TableCell align="right">
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            justifyContent="flex-end"
-                          >
-                            {/* ================= ADMIN ACTIONS ================= */}
-                            {role === "COLLEGE_ADMIN" && (
-                              <>
-                                <IconButton
-                                  size="small"
-                                  onClick={() => {
-                                    setEditingCourse(course);
-                                    setShowForm(true);
-                                  }}
-                                >
-                                  <EditIcon fontSize="small" />
-                                </IconButton>
+                      <TableCell align="right">
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          justifyContent="flex-end"
+                        >
+                          {/* ================= ADMIN ================= */}
+                          {role === "COLLEGE_ADMIN" && (
+                            <>
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setEditingCourse(course);
+                                  setShowForm(true);
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
 
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() =>
-                                    navigate(
-                                      `/courses/${course.id}/subjects`,
-                                      { state: { course } }
-                                    )
-                                  }
-                                >
-                                  Subjects
-                                </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() =>
+                                  navigate(`/courses/${course.id}/subjects`, {
+                                    state: { course },
+                                  })
+                                }
+                              >
+                                Subjects
+                              </Button>
 
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() =>
-                                    navigate(
-                                      `/courses/${course.id}/enrollments`,
-                                      { state: { course } }
-                                    )
-                                  }
-                                >
-                                  Enrollments
-                                </Button>
-                              </>
-                            )}
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() =>
+                                  navigate(`/courses/${course.id}/enrollments`, {
+                                    state: { course },
+                                  })
+                                }
+                              >
+                                Enrollments
+                              </Button>
+                            </>
+                          )}
 
-                            {/* ================= TEACHER ACTIONS ================= */}
-                            {role === "TEACHER" && (
-                              <>
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() =>
-                                    navigate(
-                                      `/teacher/courses/${course.id}/students`
-                                    )
-                                  }
-                                >
-                                  Students
-                                </Button>
+                          {/* ================= TEACHER ================= */}
+                          {role === "TEACHER" && (
+                            <>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() =>
+                                  navigate(`/teacher/courses/${course.id}/students`)
+                                }
+                              >
+                                Students
+                              </Button>
 
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() =>
-                                    navigate(
-                                      `/teacher/courses/${course.id}/marks`
-                                    )
-                                  }
-                                >
-                                  Marks
-                                </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() =>
+                                  navigate(`/teacher/courses/${course.id}/marks`)
+                                }
+                              >
+                                Marks
+                              </Button>
 
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() =>
-                                    navigate(
-                                      `/teacher/courses/${course.id}/attendance`
-                                    )
-                                  }
-                                >
-                                  Attendance
-                                </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() =>
+                                  navigate(`/teacher/courses/${course.id}/attendance`)
+                                }
+                              >
+                                Attendance
+                              </Button>
 
-                                <Button
-                                  size="small"
-                                  variant="contained"
-                                  onClick={() =>
-                                    navigate("/teacher/ai-reports")
-                                  }
-                                >
-                                  AI Reports
-                                </Button>
-                              </>
-                            )}
-                          </Stack>
-                        </TableCell>
-                      )}
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={() =>
+                                  navigate("/teacher/ai-reports")
+                                }
+                              >
+                                AI Reports
+                              </Button>
+                            </>
+                          )}
+
+                          {/* ================= STUDENT ================= */}
+                          {role === "STUDENT" && (
+                            <>
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={() =>
+                                  navigate(`/courses/${course.id}/subjects`)
+                                }
+                              >
+                                Subjects
+                              </Button>
+
+                              
+                            </>
+                          )}
+                        </Stack>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

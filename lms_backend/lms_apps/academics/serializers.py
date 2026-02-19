@@ -121,4 +121,5 @@ class StudentMarksSerializer(serializers.ModelSerializer):
             "marks",
             "teacher_name",
             "created_at",
+            "remarks"
         ]

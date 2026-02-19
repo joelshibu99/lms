@@ -21,8 +21,9 @@ import CourseEnrollmentsPage from "../features/courses/CourseEnrollmentsPage";
 import TeacherMarksPage from "../features/teacher/TeacherMarksPage";
 import TeacherAIReportsPage from "../features/teacher/TeacherAIReportsPage";
 import TeacherStudentsPage from "../features/teacher/TeacherStudentsPage";
+import TeacherRiskPage from "../features/teacher/TeacherRiskPage";
 
-import StudentPerformance from "../features/student/StudentPerformance"; // ✅ ADDED
+import StudentPerformance from "../features/student/StudentPerformance"; 
 
 const AppRoutes = () =>
   useRoutes([
@@ -122,6 +123,16 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
+            {
+            path: "/teacher/risk",
+            element: (
+              <RoleGuard allowedRoles={["TEACHER"]}>
+                <TeacherRiskPage />
+              </RoleGuard>
+            ),
+          },
+
+
 
             /* ---------------- STUDENT ---------------- */
             {
@@ -157,13 +168,14 @@ const AppRoutes = () =>
               ),
             },
             {
-              path: "/courses/:courseId/subjects",
-              element: (
-                <RoleGuard allowedRoles={["COLLEGE_ADMIN"]}>
-                  <SubjectsPage />
-                </RoleGuard>
-              ),
-            },
+            path: "/courses/:courseId/subjects",
+            element: (
+              <RoleGuard allowedRoles={["COLLEGE_ADMIN", "STUDENT"]}>
+                <SubjectsPage />
+              </RoleGuard>
+            ),
+          },
+
             {
               path: "/courses/:courseId/enrollments",
               element: (
