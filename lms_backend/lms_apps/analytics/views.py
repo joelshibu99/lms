@@ -1,18 +1,22 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 from django.db.models import Avg, Count
 
 from lms_apps.accounts.permissions import IsCollegeAdmin, IsSystemAdmin
 from lms_apps.accounts.models import User
 from lms_apps.academics.models import Subject, Marks
 from lms_apps.attendance.models import Attendance
+from lms_apps.courses.models import Enrollment
 
 from .serializers import CollegePerformanceSerializer
 from lms_apps.ml.predictor import predict_risk
 
 
-
+# ─────────────────────────────────────────
+# COLLEGE PERFORMANCE VIEW
+# ─────────────────────────────────────────
 class CollegePerformanceView(APIView):
     permission_classes = [IsAuthenticated, IsCollegeAdmin | IsSystemAdmin]
 
@@ -29,9 +33,8 @@ class CollegePerformanceView(APIView):
         ).count()
 
         average_marks = Marks.objects.filter(
-        student__college=college
+            student__college=college
         ).aggregate(avg=Avg("marks_obtained"))["avg"] or 0.0
-
 
         data = {
             "total_students": total_students,
@@ -43,6 +46,9 @@ class CollegePerformanceView(APIView):
         return Response(serializer.data)
 
 
+# ─────────────────────────────────────────
+# ATTENDANCE STATS VIEW
+# ─────────────────────────────────────────
 class AttendanceStatsView(APIView):
     permission_classes = [IsAuthenticated, IsCollegeAdmin | IsSystemAdmin]
 
@@ -58,6 +64,9 @@ class AttendanceStatsView(APIView):
         return Response(stats)
 
 
+# ─────────────────────────────────────────
+# SINGLE STUDENT RISK VIEW
+# ─────────────────────────────────────────
 class StudentRiskView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -75,29 +84,17 @@ class StudentRiskView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Allow Admin
-        if request.user.role == "COLLEGE_ADMIN":
-            pass
-
-        # Allow Teacher (temporary relaxed check)
-        elif request.user.role == "TEACHER":
-            pass
-
-        else:
+        if request.user.role not in ["COLLEGE_ADMIN", "TEACHER"]:
             return Response(
                 {"detail": "Not allowed"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Compute marks
         avg_marks = Marks.objects.filter(
             student=student
         ).aggregate(avg=Avg("marks_obtained"))["avg"] or 0.0
 
-        attendance_qs = Attendance.objects.filter(
-            student=student
-        )
-
+        attendance_qs = Attendance.objects.filter(student=student)
         total = attendance_qs.count()
         present = attendance_qs.filter(is_present=True).count()
 
@@ -112,9 +109,11 @@ class StudentRiskView(APIView):
             "risk_label": risk["label"],
             "risk_probability": risk["probability"]
         })
-from lms_apps.courses.models import Enrollment
-from lms_apps.academics.models import Subject
 
+
+# ─────────────────────────────────────────
+# TEACHER RISK OVERVIEW 
+# ─────────────────────────────────────────
 class TeacherRiskOverviewView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -122,7 +121,6 @@ class TeacherRiskOverviewView(APIView):
         if request.user.role != "TEACHER":
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        # Get teacher’s courses via subjects
         subjects = Subject.objects.filter(
             teacher=request.user
         ).select_related("course")
@@ -146,21 +144,28 @@ class TeacherRiskOverviewView(APIView):
                 student=student
             ).aggregate(avg=Avg("marks_obtained"))["avg"] or 0.0
 
-            total_classes = Attendance.objects.filter(
-                student=student
-            ).count()
+            attendance_qs = Attendance.objects.filter(student=student)
+            total = attendance_qs.count()
+            present = attendance_qs.filter(is_present=True).count()
 
-            present_classes = Attendance.objects.filter(
-                student=student,
-                is_present=True
-            ).count()
-
-            attendance_pct = (
-                (present_classes / total_classes) * 100
-                if total_classes > 0 else 0
-            )
+            attendance_pct = (present / total * 100) if total > 0 else 0
 
             risk = predict_risk(avg_marks, attendance_pct)
+
+            label = risk["label"]
+            probability = risk["probability"]
+
+            # 🔍 Explainable AI Logic
+            reasons = []
+
+            if attendance_pct < 60:
+                reasons.append("Low attendance")
+
+            if avg_marks < 40:
+                reasons.append("Low academic performance")
+
+            if label == "SAFE":
+                reasons.append("Stable performance")
 
             result.append({
                 "id": student.id,
@@ -168,8 +173,9 @@ class TeacherRiskOverviewView(APIView):
                 "email": student.email,
                 "average_marks": round(avg_marks, 2),
                 "attendance_percentage": round(attendance_pct, 2),
-                "risk_status": risk
+                "risk_status": label,
+                "risk_probability": round(probability, 2),
+                "risk_reasons": reasons
             })
 
         return Response(result)
-
