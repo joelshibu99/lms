@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchCollegeUsers } from "../../api/users.api";
+import { fetchUsers } from "../../api/users.api";
 import { fetchAdminCourses } from "../../api/courses.api";
 import { fetchSubjects } from "../../api/subjects.api";
 
@@ -35,12 +35,12 @@ const CollegeAdminDashboard = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const usersData = await fetchCollegeUsers();
-        const coursesRes = await fetchAdminCourses(); // ✅ FIXED
+        const usersData = await fetchUsers();
+        const coursesRes = await fetchAdminCourses();
         const subjectsData = await fetchSubjects();
 
         setUsers(usersData || []);
-        setCourses(coursesRes?.data || []); // ✅ FIXED
+        setCourses(coursesRes?.data || []);
         setSubjects(subjectsData || []);
       } catch (error) {
         console.error("Failed to load dashboard data", error);

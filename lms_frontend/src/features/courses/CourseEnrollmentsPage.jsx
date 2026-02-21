@@ -6,7 +6,7 @@ import {
   removeEnrollment,
 } from "../../api/courses.api";
 
-import { fetchCollegeUsers } from "../../api/users.api";
+import { fetchUsers } from "../../api/users.api";
 
 
 import {
@@ -58,9 +58,9 @@ const CourseEnrollmentsPage = () => {
     setLoading(true);
     try {
       const [enrollmentRes, usersRes] = await Promise.all([
-        fetchCourseEnrollments(courseId),
-        fetchCollegeUsers(),
-      ]);
+  fetchCourseEnrollments(courseId),
+  fetchUsers(),
+]);
 
       setEnrollments(enrollmentRes.data || []);
 

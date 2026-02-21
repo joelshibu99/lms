@@ -9,6 +9,15 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 # ─────────────────────────────────────────
 
 class UserSerializer(serializers.ModelSerializer):
+    college_name = serializers.CharField(
+        source="college.name",
+        read_only=True
+    )
+    college_id = serializers.IntegerField(
+        source="college.id",
+        read_only=True
+    )
+
     class Meta:
         model = User
         fields = [
@@ -17,8 +26,9 @@ class UserSerializer(serializers.ModelSerializer):
             "full_name",
             "role",
             "is_active",
+            "college_id",
+            "college_name",
         ]
-
 
 # ─────────────────────────────────────────
 # COLLEGE ADMIN - CREATE USER

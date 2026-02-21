@@ -1,9 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import {
-  fetchCollegeUsers,
-  updateUserStatus,
-  createCollegeUser,
-  updateCollegeUser,
+  fetchUsers,
+  updateUser,
+  createUser,
 } from "../../api/users.api";
 import { useAuth } from "../../auth/AuthContext";
 
@@ -80,7 +79,7 @@ const CollegeUsersPage = () => {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const data = await fetchCollegeUsers();
+      const data = await fetchUsers();
 
       const filtered = data.filter(
         (u) => u.email !== localStorage.getItem("email")
@@ -134,7 +133,7 @@ const CollegeUsersPage = () => {
       setFormLoading(true);
 
       if (editingUser) {
-        await updateCollegeUser(editingUser.id, {
+          await updateUser(editingUser.id, {
           full_name: formData.full_name,
           role: formData.role,
         });
@@ -145,7 +144,7 @@ const CollegeUsersPage = () => {
           severity: "success",
         });
       } else {
-        await createCollegeUser(formData);
+        await createUser(formData);
 
         setSnackbar({
           open: true,
@@ -189,7 +188,7 @@ const CollegeUsersPage = () => {
     try {
       setActionLoading(true);
 
-      await updateUserStatus(selectedUser.id, {
+      await updateUser(selectedUser.id, {
         is_active: !selectedUser.is_active,
       });
 

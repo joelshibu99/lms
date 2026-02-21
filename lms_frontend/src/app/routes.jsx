@@ -23,7 +23,10 @@ import TeacherAIReportsPage from "../features/teacher/TeacherAIReportsPage";
 import TeacherStudentsPage from "../features/teacher/TeacherStudentsPage";
 import TeacherRiskPage from "../features/teacher/TeacherRiskPage";
 
-import StudentPerformance from "../features/student/StudentPerformance"; 
+import StudentPerformance from "../features/student/StudentPerformance";
+
+import SystemAdminCollegesPage from "../features/systemAdmin/SystemAdminCollegesPage";
+import SystemAdminUsersPage from "../features/systemAdmin/SystemAdminUsersPage";
 
 const AppRoutes = () =>
   useRoutes([
@@ -32,13 +35,14 @@ const AppRoutes = () =>
       element: <Login />,
     },
     {
-      element: <ProtectedRoute />, // 🔐 Global protection
+      element: <ProtectedRoute />, 
       children: [
         {
           element: <AppLayout />,
           children: [
 
             /* ---------------- SYSTEM ADMIN ---------------- */
+
             {
               path: "/system-admin",
               element: (
@@ -47,8 +51,45 @@ const AppRoutes = () =>
                 </RoleGuard>
               ),
             },
+            {
+              path: "/system-admin/colleges",
+              element: (
+                <RoleGuard allowedRoles={["SYSTEM_ADMIN"]}>
+                  <SystemAdminCollegesPage />
+                </RoleGuard>
+              ),
+            },
+            {
+              path: "/system-admin/users",
+              element: (
+                <RoleGuard allowedRoles={["SYSTEM_ADMIN"]}>
+                  <SystemAdminUsersPage />
+                </RoleGuard>
+              ),
+            },
+            {
+              path: "/system-admin/analytics",
+              element: (
+                <RoleGuard allowedRoles={["SYSTEM_ADMIN"]}>
+                  <div style={{ padding: 24 }}>
+                    System Analytics (Coming Soon)
+                  </div>
+                </RoleGuard>
+              ),
+            },
+            {
+              path: "/system-admin/settings",
+              element: (
+                <RoleGuard allowedRoles={["SYSTEM_ADMIN"]}>
+                  <div style={{ padding: 24 }}>
+                    System Settings (Coming Soon)
+                  </div>
+                </RoleGuard>
+              ),
+            },
 
             /* ---------------- COLLEGE ADMIN ---------------- */
+
             {
               path: "/college-admin",
               element: (
@@ -67,6 +108,7 @@ const AppRoutes = () =>
             },
 
             /* ---------------- TEACHER ---------------- */
+
             {
               path: "/teacher",
               element: (
@@ -124,17 +166,16 @@ const AppRoutes = () =>
               ),
             },
             {
-            path: "/teacher/risk",
-            element: (
-              <RoleGuard allowedRoles={["TEACHER"]}>
-                <TeacherRiskPage />
-              </RoleGuard>
-            ),
-          },
-
-
+              path: "/teacher/risk",
+              element: (
+                <RoleGuard allowedRoles={["TEACHER"]}>
+                  <TeacherRiskPage />
+                </RoleGuard>
+              ),
+            },
 
             /* ---------------- STUDENT ---------------- */
+
             {
               path: "/student",
               element: (
@@ -153,6 +194,7 @@ const AppRoutes = () =>
             },
 
             /* ---------------- COURSES ---------------- */
+
             {
               path: "/courses",
               element: (
@@ -168,14 +210,13 @@ const AppRoutes = () =>
               ),
             },
             {
-            path: "/courses/:courseId/subjects",
-            element: (
-              <RoleGuard allowedRoles={["COLLEGE_ADMIN", "STUDENT"]}>
-                <SubjectsPage />
-              </RoleGuard>
-            ),
-          },
-
+              path: "/courses/:courseId/subjects",
+              element: (
+                <RoleGuard allowedRoles={["COLLEGE_ADMIN", "STUDENT"]}>
+                  <SubjectsPage />
+                </RoleGuard>
+              ),
+            },
             {
               path: "/courses/:courseId/enrollments",
               element: (
@@ -186,6 +227,7 @@ const AppRoutes = () =>
             },
 
             /* ---------------- UNAUTHORIZED ---------------- */
+
             {
               path: "/unauthorized",
               element: <Unauthorized />,

@@ -1,140 +1,154 @@
 import { useEffect, useState } from "react";
 import { fetchColleges } from "../../api/colleges.api";
+import { useNavigate } from "react-router-dom";
 
 import {
   Grid,
   Card,
   CardContent,
   Typography,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Chip,
+  Box,
+  Button,
 } from "@mui/material";
 
 const SystemAdminDashboard = () => {
   const [colleges, setColleges] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const loadColleges = async () => {
+    const load = async () => {
       try {
-        const data = await fetchColleges(); // returns array
+        const data = await fetchColleges();
         setColleges(data);
-      } catch (error) {
-        console.error("Failed to load colleges", error);
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        console.error(err);
       }
     };
 
-    loadColleges();
+    load();
   }, []);
+
+  const totalColleges = colleges.length;
+  const activeColleges = colleges.filter(
+  c => c.status === "ACTIVE"
+).length;
+
+const inactiveColleges = colleges.filter(
+  c => c.status === "INACTIVE"
+).length;
 
   return (
     <>
-      {/* Page Title */}
       <Typography variant="h4" fontWeight="bold" gutterBottom>
-        System Admin Dashboard
+        System Overview
       </Typography>
 
-      {/* Summary Cards */}
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
+      {/* Metrics Row */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={4}>
+          <Card elevation={2}>
             <CardContent>
               <Typography variant="subtitle2" color="text.secondary">
                 Total Colleges
               </Typography>
-              <Typography variant="h5">
-                {loading ? "—" : colleges.length}
+              <Typography variant="h5">{totalColleges}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Card elevation={2}>
+            <CardContent>
+              <Typography variant="subtitle2" color="text.secondary">
+                Active Colleges
+              </Typography>
+              <Typography variant="h5" color="success.main">
+                {activeColleges}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
+        <Grid item xs={12} md={4}>
+          <Card elevation={2}>
             <CardContent>
               <Typography variant="subtitle2" color="text.secondary">
-                College Admins
+                Inactive Colleges
               </Typography>
-              <Typography variant="h5">—</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" color="text.secondary">
-                Teachers
+              <Typography variant="h5" color="error.main">
+                {inactiveColleges}
               </Typography>
-              <Typography variant="h5">—</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" color="text.secondary">
-                Students
-              </Typography>
-              <Typography variant="h5">—</Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Colleges Table */}
-      <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-        Colleges
+      {/* Quick Navigation */}
+      <Typography variant="h6" gutterBottom>
+        Quick Actions
       </Typography>
 
-      {loading && (
-        <Typography variant="body2" sx={{ mb: 2 }}>
-          Loading colleges...
-        </Typography>
-      )}
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4}>
+          <Card elevation={1}>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                Manage Colleges
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                Create, activate or deactivate colleges.
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => navigate("/system-admin/colleges")}
+              >
+                Go to Colleges
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
 
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>College Name</TableCell>
-            <TableCell>Code</TableCell>
-            <TableCell>Admin Email</TableCell>
-            <TableCell>Status</TableCell>
-          </TableRow>
-        </TableHead>
+        <Grid item xs={12} md={4}>
+          <Card elevation={1}>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                Manage Users
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                View and manage all system users.
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => navigate("/system-admin/users")}
+              >
+                Go to Users
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
 
-        <TableBody>
-          {!loading && colleges.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={4} align="center">
-                No colleges found
-              </TableCell>
-            </TableRow>
-          )}
-
-          {colleges.map((college) => (
-            <TableRow key={college.id}>
-              <TableCell>{college.name}</TableCell>
-              <TableCell>{college.code}</TableCell>
-              <TableCell>{college.admin_email || "-"}</TableCell>
-              <TableCell>
-                <Chip
-                  label={college.is_active ? "ACTIVE" : "INACTIVE"}
-                  color={college.is_active ? "success" : "default"}
-                  size="small"
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+        <Grid item xs={12} md={4}>
+          <Card elevation={1}>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                System Analytics
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                View system-wide performance insights.
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => navigate("/system-admin/analytics")}
+              >
+                View Analytics
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </>
   );
 };

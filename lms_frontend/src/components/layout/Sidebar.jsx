@@ -80,17 +80,32 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose }) => {
    */
   const sidebarConfig = {
     SYSTEM_ADMIN: [
-      {
-        label: "Dashboard",
-        icon: <AdminPanelSettingsIcon />,
-        to: "/system-admin",
-      },
-      {
-        label: "Colleges",
-        icon: <SchoolIcon />,
-        to: "/system-admin/colleges",
-      },
-    ],
+  {
+    label: "Dashboard",
+    icon: <DashboardIcon />,
+    to: "/system-admin",
+  },
+  {
+    label: "Colleges",
+    icon: <SchoolIcon />,
+    to: "/system-admin/colleges",
+  },
+  {
+    label: "Users",
+    icon: <PeopleIcon />,
+    to: "/system-admin/users",
+  },
+  // {
+  //   label: "Analytics",
+  //   icon: <InsightsIcon />,
+  //   to: "/system-admin/analytics",
+  // },
+  // {
+  //   label: "Settings",
+  //   icon: <AdminPanelSettingsIcon />,
+  //   to: "/system-admin/settings",
+  // },
+],
 
     COLLEGE_ADMIN: [
       {

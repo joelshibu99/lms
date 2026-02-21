@@ -3,6 +3,11 @@ from lms_apps.colleges.models import College
 
 
 class CollegeSerializer(serializers.ModelSerializer):
+    # 🔥 Admin fields (not stored in College model)
+    admin_name = serializers.CharField(write_only=True)
+    admin_email = serializers.EmailField(write_only=True)
+    admin_password = serializers.CharField(write_only=True)
+
     class Meta:
         model = College
         fields = [
@@ -10,7 +15,11 @@ class CollegeSerializer(serializers.ModelSerializer):
             "name",
             "code",
             "status",
-            "is_deleted",
             "created_at",
+
+           
+            "admin_name",
+            "admin_email",
+            "admin_password",
         ]
         read_only_fields = ["id", "created_at"]

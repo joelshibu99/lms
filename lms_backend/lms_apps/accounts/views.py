@@ -30,34 +30,57 @@ class LoginView(TokenObtainPairView):
     serializer_class = LoginTokenSerializer
 
 
+from rest_framework.exceptions import PermissionDenied
+
+
 class UserViewSet(ModelViewSet):
     """
-    College Admin:
-    - GET  -> list users of their college
-    - POST -> create teacher / student / staff
-    - PATCH -> activate / deactivate users
+    SYSTEM_ADMIN:
+        - Full access to all users
+
+    COLLEGE_ADMIN:
+        - Manage users only within their college
     """
-    permission_classes = [IsAuthenticated, IsCollegeAdmin]
+
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return User.objects.filter(
-            college=self.request.user.college
-        ).exclude(id=self.request.user.id)
+        user = self.request.user
+
+        # SYSTEM ADMIN → All users
+        if user.role == "SYSTEM_ADMIN":
+            return User.objects.exclude(id=user.id)
+
+        # COLLEGE ADMIN → Only their college users
+        if user.role == "COLLEGE_ADMIN":
+            return User.objects.filter(
+                college=user.college
+            ).exclude(id=user.id)
+
+        raise PermissionDenied("You do not have permission.")
 
     def get_serializer_class(self):
         if self.action == "create":
             return CollegeUserCreateSerializer
         return UserSerializer
 
-    # 🔥 BUSINESS RULE PROTECTION
     def partial_update(self, request, *args, **kwargs):
+        user = request.user
         instance = self.get_object()
 
-        # Check if trying to deactivate
+        # 🔒 Restrict non-admin roles
+        if user.role not in ["SYSTEM_ADMIN", "COLLEGE_ADMIN"]:
+            raise PermissionDenied("You do not have permission.")
+
+        # 🔥 Prevent College Admin from modifying other colleges
+        if user.role == "COLLEGE_ADMIN":
+            if instance.college != user.college:
+                raise PermissionDenied("Cannot modify user outside your college.")
+
+        # 🔥 Business Rule: Cannot deactivate teacher assigned to subjects
         is_active = request.data.get("is_active", None)
 
         if is_active is False and instance.role == "TEACHER":
-            # Check if teacher is assigned to any subjects
             assigned_subjects = Subject.objects.filter(
                 teacher=instance
             ).exists()
